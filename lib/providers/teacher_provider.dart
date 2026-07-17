@@ -188,6 +188,51 @@ class TeacherProvider extends ChangeNotifier {
     }
   }
 
+  final List<Book> _books = [
+    Book(
+      id: 'book1',
+      title: 'The Brave Little Squirrel',
+      grade: 'Grade 4',
+      section: 'Section A',
+      content: 'Once upon a time, in a lush green forest, lived a little squirrel named Sammy. Sammy was smaller than other squirrels, but he was very brave. One day, a huge storm hit the forest...',
+    ),
+    Book(
+      id: 'book2',
+      title: 'Space Exploration',
+      grade: 'Grade 5',
+      section: 'Section B',
+      content: 'Human beings have always looked up at the stars and wondered. Space exploration began in the mid-20th century. Today, robotic rovers explore Mars, and astronomers look for distant habitable planets...',
+    ),
+    Book(
+      id: 'book3',
+      title: 'The Whispering Trees',
+      grade: 'Grade 5',
+      section: 'Section A',
+      content: 'Deep in the valley, the old trees stood tall. People said that if you listened closely on a quiet night, you could hear the trees whispering ancient secrets of the earth to each other...',
+    ),
+    Book(
+      id: 'book4',
+      title: 'Nature Trails',
+      grade: 'Grade 6',
+      section: 'Section A',
+      content: 'Hiking through nature trails is a wonderful way to connect with the environment. Along the path, you can observe diverse ecosystems, from tiny insects on decaying logs to majestic birds nesting in the canopy...',
+    ),
+  ];
+
+  List<Book> get books => _books;
+
+  void addBook(String title, String grade, String section, String content) {
+    final newBook = Book(
+      id: 'book_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      grade: grade,
+      section: section,
+      content: content,
+    );
+    _books.add(newBook);
+    notifyListeners();
+  }
+
   void login(String email, String password) {
     if (email.isNotEmpty && password.isNotEmpty) {
       _isLoggedIn = true;

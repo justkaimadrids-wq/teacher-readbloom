@@ -16,6 +16,8 @@ import 'mobile/profile_mobile.dart';
 import 'web/profile_web.dart';
 import 'mobile/evaluation_detail_mobile.dart';
 import 'web/detailed_progress_web.dart';
+import 'mobile/books_mobile.dart';
+import 'web/books_web.dart';
 
 class TeacherMainScaffold extends StatefulWidget {
   const TeacherMainScaffold({super.key});
@@ -59,7 +61,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
               border: const Border(top: BorderSide(color: Colors.white12)),
             ),
             child: BottomNavigationBar(
-              currentIndex: _currentTab > 4 ? 0 : _currentTab,
+              currentIndex: _currentTab > 5 ? 0 : _currentTab,
               onTap: (index) => setState(() => _currentTab = index),
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.transparent,
@@ -79,6 +81,10 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.list_alt_outlined),
                   label: 'Students',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.menu_book_outlined),
+                  label: 'Books',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.history),
@@ -156,9 +162,10 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                     const SizedBox(height: 32),
                     _buildSidebarItem(0, Icons.dashboard_outlined, 'Dashboard'),
                     _buildSidebarItem(1, Icons.list_alt_outlined, 'Students Progress'),
-                    _buildSidebarItem(2, Icons.history, 'Activity Log'),
-                    _buildSidebarItem(3, Icons.workspace_premium, 'Badges'),
-                    _buildSidebarItem(4, Icons.settings_outlined, 'Settings'),
+                    _buildSidebarItem(2, Icons.menu_book_outlined, 'Books'),
+                    _buildSidebarItem(3, Icons.history, 'Activity Log'),
+                    _buildSidebarItem(4, Icons.workspace_premium, 'Badges'),
+                    _buildSidebarItem(5, Icons.settings_outlined, 'Settings'),
                     const Spacer(),
                     // Teacher User Indicator at bottom
                     Container(
@@ -266,7 +273,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
   void _navigateToStudentDetail(dynamic student) {
     context.read<TeacherProvider>().selectStudentForEvaluation(student);
     setState(() {
-      _currentTab = 5; // Direct to Detail Evaluation Page
+      _currentTab = 6; // Direct to Detail Evaluation Page
     });
   }
 
@@ -283,12 +290,14 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       case 1:
         return const StudentListMobileBody();
       case 2:
-        return const ActivityLogMobileBody();
+        return const BooksMobileBody();
       case 3:
-        return const BadgesMobileBody();
+        return const ActivityLogMobileBody();
       case 4:
-        return const ProfileMobileBody();
+        return const BadgesMobileBody();
       case 5:
+        return const ProfileMobileBody();
+      case 6:
         return EvaluationDetailMobileBody(onBack: _navigateBackToDashboard);
       default:
         return DashboardMobileBody(onSelectStudent: _navigateToStudentDetail);
@@ -302,12 +311,14 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       case 1:
         return StudentListWebBody(onSelectStudent: _navigateToStudentDetail);
       case 2:
-        return const ActivityLogWebBody();
+        return const BooksWebBody();
       case 3:
-        return const BadgesWebBody();
+        return const ActivityLogWebBody();
       case 4:
-        return const ProfileWebBody();
+        return const BadgesWebBody();
       case 5:
+        return const ProfileWebBody();
+      case 6:
         return DetailedProgressWebBody(onBack: _navigateBackToDashboard);
       default:
         return DashboardWebBody(onSelectStudent: _navigateToStudentDetail);
