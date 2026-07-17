@@ -1,0 +1,67 @@
+class ClassStats {
+  final String grade;
+  final int totalStudents;
+  final double completionRate;
+  final int totalLessons;
+
+  ClassStats({
+    required this.grade,
+    required this.totalStudents,
+    required this.completionRate,
+    required this.totalLessons,
+  });
+}
+
+class StudentProgress {
+  final String id;
+  final String name;
+  final double readingAccuracy;
+  final double vocabularyLevel;
+  final int progressCurrent;
+  final int progressTotal;
+  final String status;
+  final List<String> badges;
+
+  StudentProgress({
+    required this.id,
+    required this.name,
+    required this.readingAccuracy,
+    required this.vocabularyLevel,
+    required this.progressCurrent,
+    required this.progressTotal,
+    required this.status,
+    required this.badges,
+  });
+}
+
+class StudentActivity {
+  final String id;
+  final String studentName;
+  final String activityTitle;
+  final double score;
+  final String date;
+
+  StudentActivity({
+    required this.id,
+    required this.studentName,
+    required this.activityTitle,
+    required this.score,
+    required this.date,
+  });
+}
+
+class EvaluationMetrics {
+  int omissions;
+  int repetitions;
+  int selfCorrections;
+  int mispronunciations;
+  String feedback;
+
+  EvaluationMetrics({
+    required this.omissions,
+    required this.repetitions,
+    required this.selfCorrections,
+    required this.mispronunciations,
+    required this.feedback,
+  });
+}
