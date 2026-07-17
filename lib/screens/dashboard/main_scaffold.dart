@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/teacher_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/responsive_layout.dart';
 import 'mobile/dashboard_mobile.dart';
 import 'web/dashboard_web.dart';
@@ -14,7 +14,7 @@ import 'mobile/badges_mobile.dart';
 import 'web/badges_web.dart';
 import 'mobile/profile_mobile.dart';
 import 'web/profile_web.dart';
-import 'mobile/detailed_progress_mobile.dart';
+import 'mobile/evaluation_detail_mobile.dart';
 import 'web/detailed_progress_web.dart';
 
 class TeacherMainScaffold extends StatefulWidget {
@@ -39,134 +39,175 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
 
   // --- MOBILE LAYOUT ---
   Widget _buildMobileScaffold(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(child: _getMobileTabBody(_currentTab)),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
-          ),
-          child: BottomNavigationBar(
-            currentIndex: _currentTab > 4 ? 0 : _currentTab,
-            onTap: (index) => setState(() => _currentTab = index),
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            selectedItemColor: TeacherTheme.primary,
-            unselectedItemColor: TeacherTheme.mutedText,
-            selectedLabelStyle: GoogleFonts.inter(
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-            ),
-            unselectedLabelStyle: GoogleFonts.inter(fontSize: 11),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard_outlined),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.list_alt_outlined),
-                label: 'Students',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.history),
-                label: 'Activity',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.workspace_premium),
-                label: 'Badges',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                label: 'Profile',
-              ),
-            ],
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('lib/assets/bg-web.png'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black54,
+            BlendMode.darken,
           ),
         ),
-      ],
+      ),
+      child: Column(
+        children: [
+          Expanded(child: _getMobileTabBody(_currentTab)),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B).withValues(alpha: 0.85),
+              border: const Border(top: BorderSide(color: Colors.white12)),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: _currentTab > 4 ? 0 : _currentTab,
+              onTap: (index) => setState(() => _currentTab = index),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              selectedItemColor: const Color(0xFF60A5FA),
+              unselectedItemColor: Colors.white54,
+              selectedLabelStyle: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+              unselectedLabelStyle: GoogleFonts.outfit(fontSize: 11),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard_outlined),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.list_alt_outlined),
+                  label: 'Students',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.history),
+                  label: 'Activity',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.workspace_premium),
+                  label: 'Badges',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  label: 'Profile',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // --- WEB LAYOUT ---
   Widget _buildWebScaffold(BuildContext context) {
     final prov = context.watch<TeacherProvider>();
-    return Row(
-      children: [
-        // Sidebar Navigation Rail
-        Container(
-          width: 250,
-          decoration: const BoxDecoration(color: Color(0xFF111827)),
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
-              Image.asset('lib/assets/logo-icon.png', height: 70, width: 70),
-              const SizedBox(height: 8),
-              Text(
-                'ReadBloom',
-                style: GoogleFonts.outfit(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'TEACHER PORTAL',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 32),
-              _buildSidebarItem(0, Icons.dashboard_outlined, 'Dashboard'),
-              _buildSidebarItem(1, Icons.list_alt_outlined, 'Students Progress'),
-              _buildSidebarItem(2, Icons.history, 'Activity Log'),
-              _buildSidebarItem(3, Icons.workspace_premium, 'Earn Badges'),
-              _buildSidebarItem(4, Icons.settings_outlined, 'Settings'),
-              const Spacer(),
-              // Teacher User Indicator at bottom
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                margin: const EdgeInsets.all(12),
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('lib/assets/bg-web.png'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black54,
+            BlendMode.darken,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Glassmorphic Sidebar Navigation Rail
+          ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                width: 300,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.black.withValues(alpha: 0.15),
+                  border: Border(
+                    right: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1.5,
+                    ),
+                  ),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.white24,
-                      child: Text(
-                        prov.teacherName.substring(0, 2).toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    const SizedBox(height: 32),
+                    Image.asset('lib/assets/logo-icon.png', height: 70, width: 70),
+                    const SizedBox(height: 8),
+                    Text(
+                      'ReadBloom',
+                      style: GoogleFonts.outfit(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                    Text(
+                      'TEACHER PORTAL',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildSidebarItem(0, Icons.dashboard_outlined, 'Dashboard'),
+                    _buildSidebarItem(1, Icons.list_alt_outlined, 'Students Progress'),
+                    _buildSidebarItem(2, Icons.history, 'Activity Log'),
+                    _buildSidebarItem(3, Icons.workspace_premium, 'Badges'),
+                    _buildSidebarItem(4, Icons.settings_outlined, 'Settings'),
+                    const Spacer(),
+                    // Teacher User Indicator at bottom
+                    Container(
+                      padding: const EdgeInsets.all(16.0),
+                      margin: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            prov.teacherName,
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Colors.white,
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Colors.white24,
+                            child: Text(
+                              prov.teacherName.substring(0, 2).toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                          Text(
-                            'ADMINISTRATOR',
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              color: Colors.white60,
-                              fontWeight: FontWeight.bold,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  prov.teacherName,
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'ADMINISTRATOR',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 9,
+                                    color: Colors.white60,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -175,22 +216,17 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-        // Main Content Area
-        Expanded(
-          child: Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('lib/assets/bg-web.png'),
-                fit: BoxFit.cover,
-              ),
             ),
-            child: _getWebTabBody(_currentTab),
           ),
-        ),
-      ],
+          // Main Content Area
+          Expanded(
+            child: Container(
+              color: Colors.transparent,
+              child: _getWebTabBody(_currentTab),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -202,18 +238,22 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
+          color: isActive ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isActive ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isActive ? TeacherTheme.primary : Colors.white70),
+            Icon(icon, color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.85)),
             const SizedBox(width: 14),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.outfit(
                 fontSize: 14,
-                color: isActive ? TeacherTheme.text : Colors.white70,
+                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.85),
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -249,7 +289,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       case 4:
         return const ProfileMobileBody();
       case 5:
-        return DetailedProgressMobileBody(onBack: _navigateBackToDashboard);
+        return EvaluationDetailMobileBody(onBack: _navigateBackToDashboard);
       default:
         return DashboardMobileBody(onSelectStudent: _navigateToStudentDetail);
     }
@@ -260,7 +300,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       case 0:
         return DashboardWebBody(onSelectStudent: _navigateToStudentDetail);
       case 1:
-        return const StudentListWebBody();
+        return StudentListWebBody(onSelectStudent: _navigateToStudentDetail);
       case 2:
         return const ActivityLogWebBody();
       case 3:

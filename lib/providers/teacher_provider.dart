@@ -38,6 +38,8 @@ class TeacherProvider extends ChangeNotifier {
       progressTotal: 20,
       status: 'GROWING',
       badges: ['Growing Reader', 'Try Hard', 'Keep Going'],
+      grade: 'Grade 4',
+      section: 'Section A',
     ),
     StudentProgress(
       id: 'stud2',
@@ -48,6 +50,8 @@ class TeacherProvider extends ChangeNotifier {
       progressTotal: 20,
       status: 'OUTSTANDING',
       badges: ['Super Reader', 'Star Reader', 'Book Boss'],
+      grade: 'Grade 5',
+      section: 'Section B',
     ),
     StudentProgress(
       id: 'stud3',
@@ -58,6 +62,8 @@ class TeacherProvider extends ChangeNotifier {
       progressTotal: 20,
       status: 'EXPLORER',
       badges: ['Try Hard', 'Keep Going'],
+      grade: 'Grade 6',
+      section: 'Section A',
     ),
     StudentProgress(
       id: 'stud4',
@@ -68,6 +74,8 @@ class TeacherProvider extends ChangeNotifier {
       progressTotal: 20,
       status: 'NON-READER',
       badges: ['Try Hard'],
+      grade: 'Grade 4',
+      section: 'Section B',
     ),
   ];
 
@@ -157,6 +165,27 @@ class TeacherProvider extends ChangeNotifier {
       feedback: f,
     );
     notifyListeners();
+  }
+
+  void addBadgeToStudent(String studentId, String badge) {
+    final index = _students.indexWhere((s) => s.id == studentId);
+    if (index != -1) {
+      final currentStudent = _students[index];
+      final updatedBadges = List<String>.from(currentStudent.badges)..add(badge);
+      _students[index] = StudentProgress(
+        id: currentStudent.id,
+        name: currentStudent.name,
+        readingAccuracy: currentStudent.readingAccuracy,
+        vocabularyLevel: currentStudent.vocabularyLevel,
+        progressCurrent: currentStudent.progressCurrent,
+        progressTotal: currentStudent.progressTotal,
+        status: currentStudent.status,
+        badges: updatedBadges,
+        grade: currentStudent.grade,
+        section: currentStudent.section,
+      );
+      notifyListeners();
+    }
   }
 
   void login(String email, String password) {

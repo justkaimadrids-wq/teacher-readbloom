@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
-import '../../../theme/app_theme.dart';
 
 class DashboardMobileBody extends StatelessWidget {
   final Function(StudentProgress) onSelectStudent;
@@ -14,30 +13,36 @@ class DashboardMobileBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<TeacherProvider>();
 
-    return Container(
-      color: TeacherTheme.background,
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Dashboard header
-              Text(
-                'Hello, Teacher Ana',
-                style: GoogleFonts.outfit(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: TeacherTheme.text,
-                ),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Dashboard header
+            Text(
+              'Hello, ${prov.teacherName}',
+              style: GoogleFonts.outfit(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Dashboard overview of your classes',
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
 
-              _buildClassesAndOverview(context, prov),
-              const SizedBox(height: 20),
-              _buildPerformanceChart(),
-            ],
-          ),
+            _buildClassesAndOverview(context, prov),
+            const SizedBox(height: 24),
+            _buildPerformanceChart(),
+          ],
         ),
       ),
     );
@@ -50,9 +55,9 @@ class DashboardMobileBody extends StatelessWidget {
         Text(
           'Classes',
           style: GoogleFonts.outfit(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: TeacherTheme.text,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 12),
@@ -63,14 +68,18 @@ class DashboardMobileBody extends StatelessWidget {
             children: prov.classes.map((cls) => _buildClassCard(cls)).toList(),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 28),
+        
         // Student Progress lists quick view
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: TeacherTheme.border),
+            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,23 +88,40 @@ class DashboardMobileBody extends StatelessWidget {
                 'Student Progress Overview',
                 style: GoogleFonts.outfit(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
                 ),
               ),
-              const Divider(),
+              const SizedBox(height: 12),
+              Divider(color: Colors.white.withValues(alpha: 0.15), thickness: 1.5),
+              const SizedBox(height: 12),
               ...prov.students.map(
                 (student) => ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     student.name,
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
                   ),
                   subtitle: Text(
                     'Accuracy: ${(student.readingAccuracy * 100).toInt()}% • Progress: ${student.progressCurrent}/${student.progressTotal}',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
                   ),
                   trailing: TextButton(
                     onPressed: () => onSelectStudent(student),
-                    child: const Text('Review'),
+                    child: Text(
+                      'Review',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFF60A5FA),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -107,19 +133,19 @@ class DashboardMobileBody extends StatelessWidget {
   }
 
   Widget _buildClassCard(ClassStats cls) {
-    Color accentColor = Colors.green;
-    if (cls.grade.contains('5')) accentColor = Colors.purple;
-    if (cls.grade.contains('6')) accentColor = Colors.orange;
+    Color accentColor = const Color(0xFF4ADE80); // Green
+    if (cls.grade.contains('5')) accentColor = const Color(0xFFC084FC); // Purple
+    if (cls.grade.contains('6')) accentColor = const Color(0xFFFBBF24); // Gold
 
     return Container(
-      width: 200,
+      width: 190,
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: accentColor.withValues(alpha: 0.35),
+          color: Colors.white.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -130,31 +156,50 @@ class DashboardMobileBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: accentColor.withValues(alpha: 0.35)),
             ),
             child: Text(
               cls.grade,
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
                 color: accentColor,
+                fontSize: 12,
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Total Students: ${cls.totalStudents}',
-            style: GoogleFonts.inter(fontSize: 12),
-          ),
-          Text(
-            'Completion: ${(cls.completionRate * 100).toInt()}%',
-            style: GoogleFonts.inter(fontSize: 12),
-          ),
-          Text(
-            'Total Lessons: ${cls.totalLessons}',
-            style: GoogleFonts.inter(fontSize: 12),
-          ),
+          const SizedBox(height: 16),
+          _buildClassStatRow('Total Students', '${cls.totalStudents}'),
+          const SizedBox(height: 4),
+          _buildClassStatRow('Completion', '${(cls.completionRate * 100).toInt()}%'),
+          const SizedBox(height: 4),
+          _buildClassStatRow('Total Lessons', '${cls.totalLessons}'),
         ],
       ),
+    );
+  }
+
+  Widget _buildClassStatRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            color: Colors.white70,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 
@@ -162,82 +207,86 @@ class DashboardMobileBody extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TeacherTheme.border),
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Performance Metric Distributions',
+            'Performance Distributions',
             style: GoogleFonts.outfit(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SizedBox(
-            height: 180,
+            height: 160,
             child: PieChart(
               PieChartData(
                 sectionsSpace: 4,
-                centerSpaceRadius: 40,
+                centerSpaceRadius: 35,
                 sections: [
                   PieChartSectionData(
-                    color: Colors.blue.shade600,
+                    color: const Color(0xFF60A5FA),
                     value: 55,
                     title: '55%',
-                    radius: 30,
-                    titleStyle: const TextStyle(
-                      fontSize: 12,
+                    radius: 25,
+                    titleStyle: GoogleFonts.outfit(
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   PieChartSectionData(
-                    color: Colors.purple.shade400,
+                    color: const Color(0xFFC084FC),
                     value: 25,
                     title: '25%',
-                    radius: 30,
-                    titleStyle: const TextStyle(
-                      fontSize: 12,
+                    radius: 25,
+                    titleStyle: GoogleFonts.outfit(
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   PieChartSectionData(
-                    color: Colors.orange.shade400,
+                    color: const Color(0xFFFBBF24),
                     value: 15,
                     title: '15%',
-                    radius: 30,
-                    titleStyle: const TextStyle(
-                      fontSize: 12,
+                    radius: 25,
+                    titleStyle: GoogleFonts.outfit(
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   PieChartSectionData(
-                    color: Colors.yellow.shade600,
+                    color: const Color(0xFFF87171),
                     value: 5,
                     title: '5%',
-                    radius: 30,
-                    titleStyle: const TextStyle(
-                      fontSize: 12,
+                    radius: 25,
+                    titleStyle: GoogleFonts.outfit(
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           // Legend
-          _buildLegendRow(Colors.blue.shade600, 'INDEPENDENT (90-100%)', '55%'),
-          _buildLegendRow(Colors.purple.shade400, 'INSTRUCTIONAL (75-89%)', '25%'),
-          _buildLegendRow(Colors.orange.shade400, 'STRUGGLING (50-74%)', '15%'),
-          _buildLegendRow(Colors.yellow.shade600, 'NON-READER (0-49%)', '5%'),
+          _buildLegendRow(const Color(0xFF60A5FA), 'INDEPENDENT (90-100%)', '55%'),
+          _buildLegendRow(const Color(0xFFC084FC), 'INSTRUCTIONAL (75-89%)', '25%'),
+          _buildLegendRow(const Color(0xFFFBBF24), 'STRUGGLING (50-74%)', '15%'),
+          _buildLegendRow(const Color(0xFFF87171), 'NON-READER (0-49%)', '5%'),
         ],
       ),
     );
@@ -245,27 +294,32 @@ class DashboardMobileBody extends StatelessWidget {
 
   Widget _buildLegendRow(Color color, String text, String val) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         children: [
           Container(
-            width: 12,
-            height: 12,
+            width: 10,
+            height: 10,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.inter(
-                fontSize: 10,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
+                color: Colors.white70,
               ),
             ),
           ),
           Text(
             val,
-            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold),
+            style: GoogleFonts.outfit(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ],
       ),

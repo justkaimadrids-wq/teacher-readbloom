@@ -21,6 +21,8 @@ class StudentProgress {
   final int progressTotal;
   final String status;
   final List<String> badges;
+  final String grade;
+  final String section;
 
   StudentProgress({
     required this.id,
@@ -31,6 +33,8 @@ class StudentProgress {
     required this.progressTotal,
     required this.status,
     required this.badges,
+    required this.grade,
+    required this.section,
   });
 }
 
