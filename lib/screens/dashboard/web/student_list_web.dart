@@ -21,21 +21,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
 
   void _showReadingHistoryPopup(BuildContext context, StudentProgress student) {
     final prov = context.read<TeacherProvider>();
-    // A mock list of stories read by this student
-    final List<Map<String, String>> stories = [
-      {
-        'title': 'The Brave Little Squirrel',
-        'date': '2026-03-10',
-        'level': 'Grade 4',
-      },
-      {'title': 'Space Exploration', 'date': '2026-02-09', 'level': 'Grade 5'},
-      {
-        'title': 'The Whispering Trees',
-        'date': '2026-01-15',
-        'level': 'Grade 5',
-      },
-      {'title': 'Nature Trails', 'date': '2025-12-05', 'level': 'Grade 6'},
-    ];
+    final submissions = prov.getReadingReviewsForStudent(student.id);
 
     showDialog(
       context: context,
@@ -98,11 +84,22 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                       Flexible(
                         child: ListView.separated(
                           shrinkWrap: true,
-                          itemCount: stories.length,
+                          itemCount: submissions.isEmpty
+                              ? 1
+                              : submissions.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 12),
                           itemBuilder: (context, idx) {
-                            final story = stories[idx];
+                            if (submissions.isEmpty) {
+                              return Text(
+                                'No submitted reading attempts yet.',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              );
+                            }
+                            final submission = submissions[idx];
                             return InkWell(
                               onTap: () {
                                 Navigator.of(
@@ -119,7 +116,8 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                   builder: (context) => EvaluationDetailPopup(
                                     student: student,
                                     eval: eval,
-                                    storyTitle: story['title']!,
+                                    storyTitle: submission.bookTitle,
+                                    submission: submission,
                                   ),
                                 );
                               },
@@ -147,7 +145,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            story['title']!,
+                                            submission.bookTitle,
                                             style: GoogleFonts.outfit(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w900,
@@ -156,7 +154,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            'Level: ${story['level']} • Date: ${story['date']}',
+                                            '${student.grade} • ${submission.submittedAtLabel} • Quiz ${submission.quizScore}/${submission.quizTotal}',
                                             style: GoogleFonts.outfit(
                                               fontSize: 12,
                                               color: Colors.white70,
@@ -233,6 +231,13 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
           student.section == selectedSection;
       return matchesSearch && matchesGrade && matchesSection;
     }).toList();
+
+    final gradeOptions = prov.availableGrades.contains(selectedGrade)
+        ? prov.availableGrades
+        : ['All Grades', ...prov.availableGrades.skip(1), selectedGrade];
+    final sectionOptions = prov.availableSections.contains(selectedSection)
+        ? prov.availableSections
+        : ['All Sections', ...prov.availableSections.skip(1), selectedSection];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,18 +340,14 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                           _selectedGrade = newValue!;
                         });
                       },
-                      items:
-                          <String>[
-                            'All Grades',
-                            'Grade 4',
-                            'Grade 5',
-                            'Grade 6',
-                          ].map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
+                      items: gradeOptions.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
@@ -384,14 +385,14 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                           _selectedSection = newValue!;
                         });
                       },
-                      items: <String>['All Sections', 'Section A', 'Section B']
-                          .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          })
-                          .toList(),
+                      items: sectionOptions.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),

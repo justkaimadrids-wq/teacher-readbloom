@@ -32,7 +32,20 @@ abstract class TeacherRepository {
   List<StudentActivity> getActivities();
   Map<String, EvaluationMetrics> getEvaluations();
   List<Book> getBooks();
+  Future<List<ClassStats>> getCurrentClasses();
+  Future<List<StudentProgress>> getCurrentStudents();
+  Future<List<StudentActivity>> getCurrentActivities();
+  Future<Map<String, List<ReadingSubmissionReview>>> getCurrentReadingReviews();
   Future<List<Book>> getCurrentBooks();
+  Future<void> sendFeedback({
+    required ReadingSubmissionReview submission,
+    required String studentId,
+    required String feedback,
+  });
+  Future<void> updateStudentSkillLevel({
+    required String studentId,
+    required String skillLevel,
+  });
   Future<Book> addBook({
     required String title,
     required String grade,
@@ -232,6 +245,34 @@ class MockTeacherRepository implements TeacherRepository {
   Future<List<Book>> getCurrentBooks() async => getBooks();
 
   @override
+  Future<List<ClassStats>> getCurrentClasses() async => getClasses();
+
+  @override
+  Future<List<StudentProgress>> getCurrentStudents() async => getStudents();
+
+  @override
+  Future<List<StudentActivity>> getCurrentActivities() async => getActivities();
+
+  @override
+  Future<Map<String, List<ReadingSubmissionReview>>>
+  getCurrentReadingReviews() async {
+    return const {};
+  }
+
+  @override
+  Future<void> sendFeedback({
+    required ReadingSubmissionReview submission,
+    required String studentId,
+    required String feedback,
+  }) async {}
+
+  @override
+  Future<void> updateStudentSkillLevel({
+    required String studentId,
+    required String skillLevel,
+  }) async {}
+
+  @override
   Future<Book> addBook({
     required String title,
     required String grade,
@@ -354,6 +395,238 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         })
         .where((label) => label.isNotEmpty)
         .toList();
+  }
+
+  @override
+  Future<List<StudentProgress>> getCurrentStudents() async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) return super.getCurrentStudents();
+
+    final rows = await client
+        .from('student_profiles')
+        .select(
+          'profile_id,grade_level,current_skill_level,profiles(full_name,email,avatar_url,status),sections(name)',
+        )
+        .order('grade_level');
+
+    final submissionsByStudent = await getCurrentReadingReviews();
+    final students = <StudentProgress>[];
+    for (final row in rows) {
+      final profile = _embeddedMap(row['profiles']);
+      final section = _embeddedMap(row['sections']);
+      final id = row['profile_id'] as String? ?? '';
+      if (id.isEmpty) continue;
+      final reviews = submissionsByStudent[id] ?? const [];
+      final submittedCount = reviews
+          .where((review) => review.status == 'submitted')
+          .length;
+      final accuracyValues = reviews
+          .map((review) => review.readingAccuracy)
+          .whereType<double>()
+          .toList();
+      final avgAccuracy = accuracyValues.isEmpty
+          ? 0.0
+          : accuracyValues.reduce((a, b) => a + b) / accuracyValues.length;
+      final status = _statusForAccuracy(avgAccuracy, submittedCount);
+
+      students.add(
+        StudentProgress(
+          id: id,
+          name: profile['full_name'] as String? ?? 'Unnamed Student',
+          readingAccuracy: avgAccuracy,
+          vocabularyLevel: avgAccuracy,
+          progressCurrent: submittedCount,
+          progressTotal: reviews.length > submittedCount
+              ? reviews.length
+              : submittedCount,
+          status: status,
+          badges: const [],
+          grade: row['grade_level'] as String? ?? '',
+          section: section['name'] as String? ?? '',
+          avatarUrl: await _getSignedAvatarUrl(
+            profile['avatar_url'] as String?,
+          ),
+          skillLevel:
+              row['current_skill_level'] as String? ?? 'Reading Explorer',
+        ),
+      );
+    }
+    return students;
+  }
+
+  @override
+  Future<List<ClassStats>> getCurrentClasses() async {
+    final students = await getCurrentStudents();
+    final books = await getCurrentBooks();
+    final byGrade = <String, List<StudentProgress>>{};
+    for (final student in students) {
+      byGrade.putIfAbsent(student.grade, () => []).add(student);
+    }
+
+    return byGrade.entries.map((entry) {
+      final gradeStudents = entry.value;
+      final completed = gradeStudents
+          .where((student) => student.progressCurrent > 0)
+          .length;
+      final lessons = books.where((book) => book.grade == entry.key).length;
+      return ClassStats(
+        grade: entry.key,
+        totalStudents: gradeStudents.length,
+        completionRate: gradeStudents.isEmpty
+            ? 0
+            : completed / gradeStudents.length,
+        totalLessons: lessons,
+      );
+    }).toList()..sort((a, b) => a.grade.compareTo(b.grade));
+  }
+
+  @override
+  Future<List<StudentActivity>> getCurrentActivities() async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) return super.getCurrentActivities();
+
+    final rows = await client
+        .from('reading_submissions')
+        .select(
+          'id,student_id,book_title_snapshot,status,submitted_at,created_at,profiles(full_name)',
+        )
+        .inFilter('status', ['submitted', 'processed'])
+        .order('created_at', ascending: false)
+        .limit(50);
+
+    return rows.map<StudentActivity>((row) {
+      final profile = _embeddedMap(row['profiles']);
+      return StudentActivity(
+        id: row['id'] as String? ?? '',
+        studentName: profile['full_name'] as String? ?? 'Student',
+        activityTitle: 'Read: ${row['book_title_snapshot'] ?? 'Untitled Book'}',
+        score: row['status'] == 'submitted' ? 1 : 0,
+        date: _dateLabel(row['submitted_at'] ?? row['created_at']),
+      );
+    }).toList();
+  }
+
+  @override
+  Future<Map<String, List<ReadingSubmissionReview>>>
+  getCurrentReadingReviews() async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      return super.getCurrentReadingReviews();
+    }
+
+    final rows = await client
+        .from('reading_submissions')
+        .select(
+          'id,student_id,book_title_snapshot,passage_text_snapshot,video_path,status,submitted_at,created_at,'
+          'transcript_results(raw_transcript,alignment_json,overall_accuracy),'
+          'quiz_answers(is_correct)',
+        )
+        .inFilter('status', ['submitted', 'processed'])
+        .order('created_at', ascending: false);
+
+    final result = <String, List<ReadingSubmissionReview>>{};
+    for (final row in rows) {
+      final studentId = row['student_id'] as String? ?? '';
+      if (studentId.isEmpty) continue;
+      final videoPath = row['video_path'] as String? ?? '';
+      final transcript = _embeddedMap(row['transcript_results']);
+      final quizRows = _embeddedList(row['quiz_answers']);
+      final quizTotal = quizRows.length;
+      final quizScore = quizRows.where((answer) {
+        final answerRow = answer as Map<String, dynamic>;
+        return answerRow['is_correct'] == true;
+      }).length;
+
+      final review = ReadingSubmissionReview(
+        id: row['id'] as String? ?? '',
+        studentId: studentId,
+        bookTitle: row['book_title_snapshot'] as String? ?? 'Untitled Book',
+        passageText: row['passage_text_snapshot'] as String? ?? '',
+        status: row['status'] as String? ?? '',
+        submittedAtLabel: _dateLabel(row['submitted_at'] ?? row['created_at']),
+        videoPath: videoPath,
+        videoUrl: videoPath.isEmpty
+            ? ''
+            : await client.storage
+                  .from('reading-videos')
+                  .createSignedUrl(videoPath, 3600),
+        rawTranscript: transcript['raw_transcript'] as String? ?? '',
+        alignment: _alignmentFromJson(transcript['alignment_json']),
+        readingAccuracy: _toDouble(transcript['overall_accuracy']),
+        quizScore: quizScore,
+        quizTotal: quizTotal,
+      );
+      result.putIfAbsent(studentId, () => []).add(review);
+    }
+    return result;
+  }
+
+  @override
+  Future<void> sendFeedback({
+    required ReadingSubmissionReview submission,
+    required String studentId,
+    required String feedback,
+  }) async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      return super.sendFeedback(
+        submission: submission,
+        studentId: studentId,
+        feedback: feedback,
+      );
+    }
+
+    await client.from('teacher_feedback').insert({
+      'submission_id': submission.id,
+      'teacher_id': user.id,
+      'student_id': studentId,
+      'feedback_text': feedback,
+    });
+    await client.from('messages').insert({
+      'recipient_id': studentId,
+      'sender_id': user.id,
+      'type': 'teacher_feedback',
+      'title': 'Reading feedback: ${submission.bookTitle}',
+      'body': feedback,
+      'related_submission_id': submission.id,
+    });
+    try {
+      await client.from('activity_logs').insert({
+        'actor_id': user.id,
+        'actor_role': 'teacher',
+        'action': 'sent_teacher_feedback',
+        'entity_type': 'reading_submission',
+        'entity_id': submission.id,
+        'metadata': {
+          'student_id': studentId,
+          'book_title': submission.bookTitle,
+        },
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> updateStudentSkillLevel({
+    required String studentId,
+    required String skillLevel,
+  }) async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      return super.updateStudentSkillLevel(
+        studentId: studentId,
+        skillLevel: skillLevel,
+      );
+    }
+
+    await client
+        .from('student_profiles')
+        .update({'current_skill_level': skillLevel})
+        .eq('profile_id', studentId);
   }
 
   @override
@@ -482,6 +755,62 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
       content: row['passage_text'] as String? ?? '',
       questions: questions,
     );
+  }
+
+  String _statusForAccuracy(double accuracy, int submittedCount) {
+    if (submittedCount == 0) return 'NO SUBMISSIONS';
+    if (accuracy >= 0.9) return 'OUTSTANDING';
+    if (accuracy >= 0.75) return 'GROWING';
+    if (accuracy >= 0.5) return 'EXPLORER';
+    return 'NEEDS SUPPORT';
+  }
+
+  String _dateLabel(dynamic rawDate) {
+    final date = DateTime.tryParse(rawDate?.toString() ?? '');
+    if (date == null) return '';
+    return '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
+  List<TranscriptWordDiff> _alignmentFromJson(dynamic rawAlignment) {
+    if (rawAlignment is! List) return const [];
+    return rawAlignment
+        .map<TranscriptWordDiff>((item) {
+          if (item is! Map) {
+            return TranscriptWordDiff(word: item.toString(), status: 'matched');
+          }
+          final word = item['expected']?.toString().trim().isNotEmpty == true
+              ? item['expected'].toString()
+              : item['word']?.toString().trim().isNotEmpty == true
+              ? item['word'].toString()
+              : item['actual']?.toString() ?? '';
+          return TranscriptWordDiff(
+            word: word,
+            status: item['status']?.toString() ?? 'matched',
+          );
+        })
+        .where((diff) => diff.word.trim().isNotEmpty)
+        .toList();
+  }
+
+  Map<String, dynamic> _embeddedMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is List && value.isNotEmpty && value.first is Map) {
+      return Map<String, dynamic>.from(value.first as Map);
+    }
+    return <String, dynamic>{};
+  }
+
+  List<dynamic> _embeddedList(dynamic value) {
+    if (value is List) return value;
+    if (value is Map<String, dynamic>) return [value];
+    return const [];
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '');
   }
 
   Future<String> _getSignedAvatarUrl(String? avatarPath) async {

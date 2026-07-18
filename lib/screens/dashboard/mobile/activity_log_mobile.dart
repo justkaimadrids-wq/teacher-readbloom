@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/teacher_provider.dart';
 
 class ActivityLogMobileBody extends StatefulWidget {
   const ActivityLogMobileBody({super.key});
@@ -14,98 +17,35 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
 
   @override
   Widget build(BuildContext context) {
-    // Mock activities to show pagination clearly
-    final List<Map<String, String>> mockActivities = [
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Brave Little Squirrel',
-        'date': '2026-03-10',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Space Exploration',
-        'date': '2026-02-09',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Asta Orfai',
-        'grade': 'Grade 6',
-        'section': 'Section A',
-        'bookRead': 'Nature Words',
-        'date': '2026-03-01',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Kei Adamson',
-        'grade': 'Grade 4',
-        'section': 'Section B',
-        'bookRead': 'Action Verbs',
-        'date': '2026-02-01',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Whispering Trees',
-        'date': '2026-01-20',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Tales of the Ocean',
-        'date': '2026-01-15',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Asta Orfai',
-        'grade': 'Grade 6',
-        'section': 'Section A',
-        'bookRead': 'Volcano Wonders',
-        'date': '2025-12-18',
-        'status': 'In Progress',
-      },
-      {
-        'studentName': 'Kei Adamson',
-        'grade': 'Grade 4',
-        'section': 'Section B',
-        'bookRead': 'Amazing Animals',
-        'date': '2025-12-10',
-        'status': 'Finished',
-      },
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Wind in the Willows',
-        'date': '2025-12-01',
-        'status': 'In Progress',
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Stars and Galaxies',
-        'date': '2025-11-20',
-        'status': 'Finished',
-      },
-    ];
+    final prov = context.watch<TeacherProvider>();
+    final mockActivities = prov.activities.map((activity) {
+      final student = prov.students.cast<dynamic>().firstWhere(
+        (student) => student.name == activity.studentName,
+        orElse: () => null,
+      );
+      return {
+        'studentName': activity.studentName,
+        'grade': student?.grade?.toString() ?? '',
+        'section': student?.section?.toString() ?? '',
+        'bookRead': activity.activityTitle.replaceFirst('Read: ', ''),
+        'date': activity.date,
+        'status': activity.score >= 1 ? 'Finished' : 'Processing',
+      };
+    }).toList();
 
     // Compute paginated items
     final totalItems = mockActivities.length;
-    final totalPages = (totalItems / _itemsPerPage).ceil();
+    final totalPages = totalItems == 0
+        ? 1
+        : (totalItems / _itemsPerPage).ceil();
+    if (_currentPage > totalPages) _currentPage = totalPages;
     final startIndex = (_currentPage - 1) * _itemsPerPage;
     final endIndex = (startIndex + _itemsPerPage < totalItems)
         ? startIndex + _itemsPerPage
         : totalItems;
-    final paginatedItems = mockActivities.sublist(startIndex, endIndex);
+    final paginatedItems = totalItems == 0
+        ? <Map<String, String>>[]
+        : mockActivities.sublist(startIndex, endIndex);
 
     return SafeArea(
       child: Column(

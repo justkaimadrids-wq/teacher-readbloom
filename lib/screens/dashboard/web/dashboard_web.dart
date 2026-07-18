@@ -72,6 +72,10 @@ class DashboardWebBody extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
+                  if (prov.teacherDataError != null) ...[
+                    const SizedBox(height: 16),
+                    _buildDataWarning(prov.teacherDataError!),
+                  ],
                   const SizedBox(height: 32),
 
                   // Classes Section Header
@@ -140,6 +144,26 @@ class DashboardWebBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDataWarning(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.28)),
+      ),
+      child: Text(
+        message,
+        style: GoogleFonts.outfit(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 13,
+        ),
+      ),
     );
   }
 

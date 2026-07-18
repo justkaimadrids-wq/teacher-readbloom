@@ -8,18 +8,23 @@ class TeacherProvider extends ChangeNotifier {
   final TeacherRepository _teacherRepository;
   final AuthService _authService;
   late TeacherAccount _account;
-  late final List<ClassStats> _classes;
-  late final List<StudentActivity> _activities;
-  late final Map<String, EvaluationMetrics> _evaluations;
+  late List<ClassStats> _classes;
+  late List<StudentActivity> _activities;
+  late Map<String, EvaluationMetrics> _evaluations;
   late List<Book> _books;
   late List<StudentProgress> _students;
+  late Map<String, List<ReadingSubmissionReview>> _readingReviewsByStudent;
   List<String> _assignedSections = const [];
 
   bool _isLoggedIn = false;
   bool _isAuthLoading = true;
   bool _isUploadingAvatar = false;
   bool _isBooksLoading = false;
+  bool _isTeacherDataLoading = false;
+  bool _isSavingFeedback = false;
+  bool _isUpdatingSkillLevel = false;
   String? _booksError;
+  String? _teacherDataError;
   StudentProgress? _selectedStudentForEvaluation;
 
   TeacherProvider({
@@ -33,6 +38,7 @@ class TeacherProvider extends ChangeNotifier {
     _activities = _teacherRepository.getActivities();
     _evaluations = _teacherRepository.getEvaluations();
     _books = List<Book>.from(_teacherRepository.getBooks());
+    _readingReviewsByStudent = const {};
     restoreSession();
   }
 
@@ -47,12 +53,31 @@ class TeacherProvider extends ChangeNotifier {
   List<ClassStats> get classes => _classes;
   List<StudentProgress> get students => _students;
   List<StudentActivity> get activities => _activities;
+  bool get isTeacherDataLoading => _isTeacherDataLoading;
+  bool get isSavingFeedback => _isSavingFeedback;
+  bool get isUpdatingSkillLevel => _isUpdatingSkillLevel;
+  String? get teacherDataError => _teacherDataError;
   StudentProgress? get selectedStudentForEvaluation =>
       _selectedStudentForEvaluation ??
       (_students.isNotEmpty ? _students[0] : null);
   List<Book> get books => _books;
   bool get isBooksLoading => _isBooksLoading;
   String? get booksError => _booksError;
+  List<String> get availableGrades {
+    final grades = _students.map((student) => student.grade).toSet().toList()
+      ..sort();
+    return ['All Grades', ...grades.where((grade) => grade.isNotEmpty)];
+  }
+
+  List<String> get availableSections {
+    final sections =
+        _students.map((student) => student.section).toSet().toList()..sort();
+    return ['All Sections', ...sections.where((section) => section.isNotEmpty)];
+  }
+
+  List<ReadingSubmissionReview> getReadingReviewsForStudent(String studentId) {
+    return List.unmodifiable(_readingReviewsByStudent[studentId] ?? const []);
+  }
 
   void selectStudentForEvaluation(StudentProgress student) {
     _selectedStudentForEvaluation = student;
@@ -108,8 +133,76 @@ class TeacherProvider extends ChangeNotifier {
         badges: updatedBadges,
         grade: currentStudent.grade,
         section: currentStudent.section,
+        avatarUrl: currentStudent.avatarUrl,
+        skillLevel: currentStudent.skillLevel,
       );
     notifyListeners();
+  }
+
+  Future<String?> sendFeedbackForSubmission({
+    required ReadingSubmissionReview submission,
+    required String studentId,
+    required String feedback,
+  }) async {
+    final cleanedFeedback = feedback.trim();
+    if (cleanedFeedback.isEmpty) return 'Please enter feedback first.';
+
+    _isSavingFeedback = true;
+    notifyListeners();
+    try {
+      await _teacherRepository.sendFeedback(
+        submission: submission,
+        studentId: studentId,
+        feedback: cleanedFeedback,
+      );
+      updateEvaluation(studentId, 0, 0, 0, 0, cleanedFeedback);
+      return null;
+    } catch (_) {
+      return 'Unable to send feedback right now.';
+    } finally {
+      _isSavingFeedback = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> updateStudentSkillLevel({
+    required String studentId,
+    required String skillLevel,
+  }) async {
+    final cleanedSkillLevel = skillLevel.trim();
+    if (cleanedSkillLevel.isEmpty) return 'Please enter a skill level.';
+
+    _isUpdatingSkillLevel = true;
+    notifyListeners();
+    try {
+      await _teacherRepository.updateStudentSkillLevel(
+        studentId: studentId,
+        skillLevel: cleanedSkillLevel,
+      );
+      _students = _students.map((student) {
+        if (student.id != studentId) return student;
+        return StudentProgress(
+          id: student.id,
+          name: student.name,
+          readingAccuracy: student.readingAccuracy,
+          vocabularyLevel: student.vocabularyLevel,
+          progressCurrent: student.progressCurrent,
+          progressTotal: student.progressTotal,
+          status: student.status,
+          badges: student.badges,
+          grade: student.grade,
+          section: student.section,
+          avatarUrl: student.avatarUrl,
+          skillLevel: cleanedSkillLevel,
+        );
+      }).toList();
+      return null;
+    } catch (_) {
+      return 'Unable to update skill level right now.';
+    } finally {
+      _isUpdatingSkillLevel = false;
+      notifyListeners();
+    }
   }
 
   Future<String?> addBook({
@@ -270,7 +363,29 @@ class TeacherProvider extends ChangeNotifier {
 
   Future<void> _loadAccountState() async {
     _account = await _teacherRepository.getCurrentAccount();
-    _assignedSections = await _teacherRepository.getAssignedSections();
-    _books = await _teacherRepository.getCurrentBooks();
+    _isTeacherDataLoading = true;
+    _teacherDataError = null;
+    notifyListeners();
+    try {
+      _assignedSections = await _teacherRepository.getAssignedSections();
+      _books = await _teacherRepository.getCurrentBooks();
+      _readingReviewsByStudent = await _teacherRepository
+          .getCurrentReadingReviews();
+      _students = await _teacherRepository.getCurrentStudents();
+      _classes = await _teacherRepository.getCurrentClasses();
+      _activities = await _teacherRepository.getCurrentActivities();
+      if (_selectedStudentForEvaluation != null &&
+          !_students.any(
+            (student) => student.id == _selectedStudentForEvaluation!.id,
+          )) {
+        _selectedStudentForEvaluation = null;
+      }
+    } catch (error) {
+      _teacherDataError =
+          'Unable to load teacher dashboard data right now. ${error.toString()}';
+    } finally {
+      _isTeacherDataLoading = false;
+      notifyListeners();
+    }
   }
 }

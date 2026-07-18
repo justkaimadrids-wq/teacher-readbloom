@@ -20,20 +20,7 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
 
   void _showReadingHistoryPopup(BuildContext context, StudentProgress student) {
     final prov = context.read<TeacherProvider>();
-    final List<Map<String, String>> stories = [
-      {
-        'title': 'The Brave Little Squirrel',
-        'date': '2026-03-10',
-        'level': 'Grade 4',
-      },
-      {'title': 'Space Exploration', 'date': '2026-02-09', 'level': 'Grade 5'},
-      {
-        'title': 'The Whispering Trees',
-        'date': '2026-01-15',
-        'level': 'Grade 5',
-      },
-      {'title': 'Nature Trails', 'date': '2025-12-05', 'level': 'Grade 6'},
-    ];
+    final submissions = prov.getReadingReviewsForStudent(student.id);
 
     showDialog(
       context: context,
@@ -96,11 +83,23 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                       const SizedBox(height: 12),
                       Expanded(
                         child: ListView.separated(
-                          itemCount: stories.length,
+                          itemCount: submissions.isEmpty
+                              ? 1
+                              : submissions.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 12),
                           itemBuilder: (context, idx) {
-                            final story = stories[idx];
+                            if (submissions.isEmpty) {
+                              return Text(
+                                'No submitted reading attempts yet.',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              );
+                            }
+                            final submission = submissions[idx];
                             return InkWell(
                               onTap: () {
                                 Navigator.of(context).pop(); // Close popup
@@ -115,7 +114,8 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                   builder: (context) => EvaluationDetailPopup(
                                     student: student,
                                     eval: eval,
-                                    storyTitle: story['title']!,
+                                    storyTitle: submission.bookTitle,
+                                    submission: submission,
                                   ),
                                 );
                               },
@@ -143,7 +143,7 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            story['title']!,
+                                            submission.bookTitle,
                                             style: GoogleFonts.outfit(
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
@@ -152,7 +152,7 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            '${story['level']} • ${story['date']}',
+                                            '${student.grade} • ${submission.submittedAtLabel}',
                                             style: GoogleFonts.inter(
                                               fontSize: 10,
                                               color: Colors.white70,
@@ -203,6 +203,13 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
           student.section == selectedSection;
       return matchesSearch && matchesGrade && matchesSection;
     }).toList();
+
+    final gradeOptions = prov.availableGrades.contains(selectedGrade)
+        ? prov.availableGrades
+        : ['All Grades', ...prov.availableGrades.skip(1), selectedGrade];
+    final sectionOptions = prov.availableSections.contains(selectedSection)
+        ? prov.availableSections
+        : ['All Sections', ...prov.availableSections.skip(1), selectedSection];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,18 +290,14 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                           _selectedGrade = newValue!;
                         });
                       },
-                      items:
-                          <String>[
-                            'All Grades',
-                            'Grade 4',
-                            'Grade 5',
-                            'Grade 6',
-                          ].map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
+                      items: gradeOptions.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
@@ -331,14 +334,14 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                           _selectedSection = newValue!;
                         });
                       },
-                      items: <String>['All Sections', 'Section A', 'Section B']
-                          .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          })
-                          .toList(),
+                      items: sectionOptions.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),

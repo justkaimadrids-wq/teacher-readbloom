@@ -37,12 +37,36 @@ class DashboardMobileBody extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
+            if (prov.teacherDataError != null) ...[
+              const SizedBox(height: 16),
+              _buildDataWarning(prov.teacherDataError!),
+            ],
             const SizedBox(height: 24),
 
             _buildClassesAndOverview(context, prov),
             const SizedBox(height: 24),
             _buildPerformanceChart(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataWarning(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.28)),
+      ),
+      child: Text(
+        message,
+        style: GoogleFonts.outfit(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
         ),
       ),
     );

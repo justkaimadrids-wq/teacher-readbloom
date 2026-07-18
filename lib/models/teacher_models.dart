@@ -23,6 +23,8 @@ class StudentProgress {
   final List<String> badges;
   final String grade;
   final String section;
+  final String avatarUrl;
+  final String skillLevel;
 
   StudentProgress({
     required this.id,
@@ -35,6 +37,8 @@ class StudentProgress {
     required this.badges,
     required this.grade,
     required this.section,
+    this.avatarUrl = '',
+    this.skillLevel = 'Reading Explorer',
   });
 }
 
@@ -52,6 +56,45 @@ class StudentActivity {
     required this.score,
     required this.date,
   });
+}
+
+class ReadingSubmissionReview {
+  final String id;
+  final String studentId;
+  final String bookTitle;
+  final String passageText;
+  final String status;
+  final String submittedAtLabel;
+  final String videoPath;
+  final String videoUrl;
+  final String rawTranscript;
+  final List<TranscriptWordDiff> alignment;
+  final double? readingAccuracy;
+  final int quizScore;
+  final int quizTotal;
+
+  const ReadingSubmissionReview({
+    required this.id,
+    required this.studentId,
+    required this.bookTitle,
+    required this.passageText,
+    required this.status,
+    required this.submittedAtLabel,
+    required this.videoPath,
+    required this.videoUrl,
+    required this.rawTranscript,
+    required this.alignment,
+    required this.readingAccuracy,
+    required this.quizScore,
+    required this.quizTotal,
+  });
+}
+
+class TranscriptWordDiff {
+  final String word;
+  final String status;
+
+  const TranscriptWordDiff({required this.word, required this.status});
 }
 
 class EvaluationMetrics {

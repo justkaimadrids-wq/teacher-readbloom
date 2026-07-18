@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../models/teacher_models.dart';
 import '../../../providers/teacher_provider.dart';
+import '../widgets/video_review_dialog.dart';
 
 // Helper class to draw dashed borders in Flutter
 class DashedBorderPainter extends CustomPainter {
@@ -112,12 +113,14 @@ class EvaluationDetailPopup extends StatelessWidget {
   final StudentProgress student;
   final EvaluationMetrics eval;
   final String storyTitle;
+  final ReadingSubmissionReview? submission;
 
   const EvaluationDetailPopup({
     super.key,
     required this.student,
     required this.eval,
     required this.storyTitle,
+    this.submission,
   });
 
   void _showWriteFeedbackPopup(
@@ -208,18 +211,30 @@ class EvaluationDetailPopup extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               final text = controller.text.trim();
-                              context.read<TeacherProvider>().updateEvaluation(
-                                student.id,
-                                eval.omissions,
-                                eval.repetitions,
-                                eval.selfCorrections,
-                                eval.mispronunciations,
-                                text,
-                              );
-                              Navigator.of(dialogContext).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              final selectedSubmission = submission;
+                              final provider = context.read<TeacherProvider>();
+                              final navigator = Navigator.of(dialogContext);
+                              final messenger = ScaffoldMessenger.of(context);
+                              final error = selectedSubmission == null
+                                  ? 'No selected reading submission was found.'
+                                  : await provider.sendFeedbackForSubmission(
+                                      submission: selectedSubmission,
+                                      studentId: student.id,
+                                      feedback: text,
+                                    );
+                              navigator.pop();
+                              if (error != null) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(error),
+                                    backgroundColor: Colors.red.shade700,
+                                  ),
+                                );
+                                return;
+                              }
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'Feedback successfully sent to ${student.name}!',
@@ -362,6 +377,15 @@ class EvaluationDetailPopup extends StatelessWidget {
   }
 
   Widget _buildLeftColumn(BuildContext context, {required bool isMobile}) {
+    final image = student.avatarUrl.isEmpty
+        ? Image.asset('lib/assets/student_avatar.png', fit: BoxFit.cover)
+        : Image.network(
+            student.avatarUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) =>
+                Image.asset('lib/assets/student_avatar.png', fit: BoxFit.cover),
+          );
+
     return Column(
       children: [
         // Beautiful Rounded Student Photo frame (Matches mockup avatar container)
@@ -374,17 +398,24 @@ class EvaluationDetailPopup extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              'lib/assets/student_avatar.png',
-              fit: BoxFit.cover,
-            ),
+            child: image,
           ),
         ),
         const SizedBox(height: 20),
 
         // REVIEW VIDEO BUTTON
         InkWell(
-          onTap: () {},
+          onTap: submission?.videoUrl.isNotEmpty == true
+              ? () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => VideoReviewDialog(
+                      videoUrl: submission!.videoUrl,
+                      title: submission!.bookTitle,
+                    ),
+                  );
+                }
+              : null,
           borderRadius: BorderRadius.circular(24),
           child: DashedContainer(
             color: Colors.black,
@@ -426,6 +457,8 @@ class EvaluationDetailPopup extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        _SkillLevelControl(student: student),
       ],
     );
   }
@@ -527,6 +560,11 @@ class EvaluationDetailPopup extends StatelessWidget {
               ),
         const SizedBox(height: 24),
 
+        if (submission != null) ...[
+          _buildSubmissionSummary(isMobile: isMobile),
+          const SizedBox(height: 18),
+        ],
+
         // Color-coded Story analysis box
         _buildMockupStoryCard(isMobile: isMobile),
       ],
@@ -570,6 +608,86 @@ class EvaluationDetailPopup extends StatelessWidget {
   }
 
   Widget _buildMockupStoryCard({required bool isMobile}) {
+    final selectedSubmission = submission;
+    if (selectedSubmission != null) {
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black, width: 2.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Transcript',
+              style: GoogleFonts.outfit(
+                fontSize: isMobile ? 13 : 15,
+                fontWeight: FontWeight.w900,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              selectedSubmission.rawTranscript.isEmpty
+                  ? 'Transcript is not available yet.'
+                  : selectedSubmission.rawTranscript,
+              style: GoogleFonts.outfit(
+                fontSize: isMobile ? 13 : 15,
+                color: Colors.black87,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Passage Alignment',
+              style: GoogleFonts.outfit(
+                fontSize: isMobile ? 13 : 15,
+                fontWeight: FontWeight.w900,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 8,
+              children: selectedSubmission.alignment.isEmpty
+                  ? [
+                      Text(
+                        selectedSubmission.passageText,
+                        style: GoogleFonts.outfit(
+                          fontSize: isMobile ? 13 : 15,
+                          color: Colors.black87,
+                          height: 1.45,
+                        ),
+                      ),
+                    ]
+                  : selectedSubmission.alignment.map((diff) {
+                      final color = _alignmentColor(diff.status);
+                      return Text(
+                        diff.word,
+                        style: GoogleFonts.outfit(
+                          fontSize: isMobile ? 13 : 15,
+                          color: color,
+                          fontWeight: color == Colors.black87
+                              ? FontWeight.w500
+                              : FontWeight.w900,
+                          decoration:
+                              diff.status == 'missing' ||
+                                  diff.status == 'substitution'
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                        ),
+                      );
+                    }).toList(),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isMobile ? 16 : 28),
@@ -719,6 +837,145 @@ class EvaluationDetailPopup extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubmissionSummary({required bool isMobile}) {
+    final selectedSubmission = submission!;
+    final accuracy = selectedSubmission.readingAccuracy == null
+        ? 'Pending'
+        : '${(selectedSubmission.readingAccuracy! * 100).round()}%';
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Wrap(
+        spacing: 18,
+        runSpacing: 8,
+        children: [
+          _summaryText('Submitted', selectedSubmission.submittedAtLabel),
+          _summaryText('Accuracy', accuracy),
+          _summaryText(
+            'Quiz',
+            '${selectedSubmission.quizScore}/${selectedSubmission.quizTotal}',
+          ),
+          _summaryText('Skill', student.skillLevel),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryText(String label, String value) {
+    return Text(
+      '$label: ${value.isEmpty ? 'N/A' : value}',
+      style: GoogleFonts.outfit(
+        color: Colors.white,
+        fontWeight: FontWeight.w800,
+        fontSize: 12,
+      ),
+    );
+  }
+
+  Color _alignmentColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'missing':
+      case 'omission':
+        return Colors.red;
+      case 'extra':
+      case 'repetition':
+        return const Color(0xFFF472B6);
+      case 'substitution':
+      case 'mismatch':
+        return const Color(0xFFEAB308);
+      default:
+        return Colors.black87;
+    }
+  }
+}
+
+class _SkillLevelControl extends StatefulWidget {
+  final StudentProgress student;
+
+  const _SkillLevelControl({required this.student});
+
+  @override
+  State<_SkillLevelControl> createState() => _SkillLevelControlState();
+}
+
+class _SkillLevelControlState extends State<_SkillLevelControl> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.student.skillLevel);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TeacherProvider>();
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'SKILL LEVEL',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: Colors.black,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _controller,
+            style: const TextStyle(fontSize: 12),
+            decoration: const InputDecoration(
+              isDense: true,
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: provider.isUpdatingSkillLevel
+                ? null
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final error = await context
+                        .read<TeacherProvider>()
+                        .updateStudentSkillLevel(
+                          studentId: widget.student.id,
+                          skillLevel: _controller.text,
+                        );
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(error ?? 'Skill level updated.'),
+                        backgroundColor: error == null
+                            ? const Color(0xFF10B981)
+                            : Colors.red.shade700,
+                      ),
+                    );
+                  },
+            child: const Text('Save'),
           ),
         ],
       ),
