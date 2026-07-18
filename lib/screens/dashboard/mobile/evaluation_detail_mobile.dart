@@ -9,10 +9,12 @@ class EvaluationDetailMobileBody extends StatefulWidget {
   const EvaluationDetailMobileBody({super.key, required this.onBack});
 
   @override
-  State<EvaluationDetailMobileBody> createState() => _EvaluationDetailMobileBodyState();
+  State<EvaluationDetailMobileBody> createState() =>
+      _EvaluationDetailMobileBodyState();
 }
 
-class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody> {
+class _EvaluationDetailMobileBodyState
+    extends State<EvaluationDetailMobileBody> {
   final TextEditingController _feedbackController = TextEditingController();
 
   @override
@@ -21,7 +23,9 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
     final prov = context.read<TeacherProvider>();
     final student = prov.selectedStudentForEvaluation;
     if (student != null) {
-      _feedbackController.text = prov.getEvaluationForStudent(student.id).feedback;
+      _feedbackController.text = prov
+          .getEvaluationForStudent(student.id)
+          .feedback;
     }
   }
 
@@ -42,7 +46,12 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
     }
 
     final eval = prov.getEvaluationForStudent(student.id);
-    final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+    final initials = student.name
+        .split(' ')
+        .map((e) => e.isNotEmpty ? e[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -70,7 +79,10 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
               // Student Card Info
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(24),
@@ -126,7 +138,9 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
                         backgroundColor: Colors.white.withValues(alpha: 0.15),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -134,7 +148,10 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
                       ),
                       child: Text(
                         'REVIEW VIDEO',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -153,7 +170,10 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
                       ),
                       child: Text(
                         'GENERATE REPORT',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -201,7 +221,10 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
                       child: TextField(
                         controller: _feedbackController,
                         maxLines: 4,
-                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 13,
+                        ),
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.all(16),
@@ -240,10 +263,26 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
       mainAxisSpacing: 14,
       childAspectRatio: 1.6,
       children: [
-        _buildPopupErrorTile('OMISSION', eval.omissions > 0 ? eval.omissions : 2, Colors.red),
-        _buildPopupErrorTile('REPETITION', eval.repetitions > 0 ? eval.repetitions : 3, const Color(0xFFF472B6)),
-        _buildPopupErrorTile('SELF CORRECTION', eval.selfCorrections > 0 ? eval.selfCorrections : 4, const Color(0xFF10B981)),
-        _buildPopupErrorTile('MISPRONUNCIATION', eval.mispronunciations > 0 ? eval.mispronunciations : 5, const Color(0xFFEAB308)),
+        _buildPopupErrorTile(
+          'OMISSION',
+          eval.omissions > 0 ? eval.omissions : 2,
+          Colors.red,
+        ),
+        _buildPopupErrorTile(
+          'REPETITION',
+          eval.repetitions > 0 ? eval.repetitions : 3,
+          const Color(0xFFF472B6),
+        ),
+        _buildPopupErrorTile(
+          'SELF CORRECTION',
+          eval.selfCorrections > 0 ? eval.selfCorrections : 4,
+          const Color(0xFF10B981),
+        ),
+        _buildPopupErrorTile(
+          'MISPRONUNCIATION',
+          eval.mispronunciations > 0 ? eval.mispronunciations : 5,
+          const Color(0xFFEAB308),
+        ),
       ],
     );
   }
@@ -313,35 +352,130 @@ class _EvaluationDetailMobileBodyState extends State<EvaluationDetailMobileBody>
                 height: 1.8,
               ),
               children: [
-                const TextSpan(text: 'Once there were two friends a ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'squirrel ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'Once there were two friends a ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'squirrel ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'and a puppy. They '),
-                const TextSpan(text: 'used ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'used ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'to '),
-                const TextSpan(text: 'live ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and '),
-                const TextSpan(text: 'thought ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'live ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and ',
+                ),
+                const TextSpan(
+                  text: 'thought ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'that it was of no use.\n\n'),
 
                 const TextSpan(text: 'One day, it started raining '),
-                const TextSpan(text: 'heavily', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'heavily',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: '. The squirrel was in '),
-                const TextSpan(text: 'high ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'high ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'spirits. He started doing '),
-                const TextSpan(text: 'antics ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'antics ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'but '),
-                const TextSpan(text: 'suddenly', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'suddenly',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: ', '),
-                const TextSpan(text: 'lost ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
-                const TextSpan(text: 'his balance and fell in the rain water.\n\n', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'lost ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'his balance and fell in the rain water.\n\n',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
                 const TextSpan(text: 'He '),
-                const TextSpan(text: 'called ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'his friend, the puppy for help. The puppy '),
-                const TextSpan(text: 'came ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'to his rescue. The squirrel climbed on its back and '),
-                const TextSpan(text: 'reached ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'a safe place. He thanked his friend for saving his life.'),
+                const TextSpan(
+                  text: 'called ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'his friend, the puppy for help. The puppy ',
+                ),
+                const TextSpan(
+                  text: 'came ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'to his rescue. The squirrel climbed on its back and ',
+                ),
+                const TextSpan(
+                  text: 'reached ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      'a safe place. He thanked his friend for saving his life.',
+                ),
               ],
             ),
           ),

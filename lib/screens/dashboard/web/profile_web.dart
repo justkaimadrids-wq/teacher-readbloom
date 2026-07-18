@@ -10,7 +10,12 @@ class ProfileWebBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<TeacherProvider>();
-    final initials = prov.teacherName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+    final initials = prov.teacherName
+        .split(' ')
+        .map((e) => e.isNotEmpty ? e[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,10 +32,7 @@ class ProfileWebBody extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 border: const Border(
-                  bottom: BorderSide(
-                    color: Colors.white24,
-                    width: 1.5,
-                  ),
+                  bottom: BorderSide(color: Colors.white24, width: 1.5),
                 ),
               ),
               child: Text(
@@ -66,18 +68,7 @@ class ProfileWebBody extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Profile Avatar
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          initials,
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFF0371C2),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
+                      _buildAvatar(context, prov, initials),
                       const SizedBox(height: 20),
 
                       // Name & Title
@@ -99,7 +90,10 @@ class ProfileWebBody extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Divider(color: Colors.white.withValues(alpha: 0.15), thickness: 1.5),
+                      Divider(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        thickness: 1.5,
+                      ),
                       const SizedBox(height: 16),
 
                       // Info Rows
@@ -117,10 +111,15 @@ class ProfileWebBody extends StatelessWidget {
                             context.read<TeacherProvider>().logout();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
+                            backgroundColor: Colors.redAccent.withValues(
+                              alpha: 0.2,
+                            ),
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.4), width: 1.5),
+                            side: BorderSide(
+                              color: Colors.redAccent.withValues(alpha: 0.4),
+                              width: 1.5,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -140,6 +139,70 @@ class ProfileWebBody extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvatar(
+    BuildContext context,
+    TeacherProvider prov,
+    String initials,
+  ) {
+    return Stack(
+      children: [
+        CircleAvatar(
+          radius: 40,
+          backgroundColor: Colors.white,
+          backgroundImage: prov.avatarUrl.isNotEmpty
+              ? NetworkImage(prov.avatarUrl)
+              : null,
+          child: prov.avatarUrl.isEmpty
+              ? Text(
+                  initials,
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF0371C2),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                  ),
+                )
+              : null,
+        ),
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Material(
+            color: const Color(0xFF0371C2),
+            shape: const CircleBorder(),
+            child: IconButton(
+              tooltip: 'Edit profile picture',
+              iconSize: 18,
+              icon: prov.isUploadingAvatar
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.photo_camera_outlined,
+                      color: Colors.white,
+                    ),
+              onPressed: prov.isUploadingAvatar
+                  ? null
+                  : () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final error = await context
+                          .read<TeacherProvider>()
+                          .updateProfilePicture();
+                      if (error != null) {
+                        messenger.showSnackBar(SnackBar(content: Text(error)));
+                      }
+                    },
             ),
           ),
         ),

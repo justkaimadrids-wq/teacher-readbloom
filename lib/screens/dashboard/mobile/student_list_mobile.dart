@@ -21,9 +21,17 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
   void _showReadingHistoryPopup(BuildContext context, StudentProgress student) {
     final prov = context.read<TeacherProvider>();
     final List<Map<String, String>> stories = [
-      {'title': 'The Brave Little Squirrel', 'date': '2026-03-10', 'level': 'Grade 4'},
+      {
+        'title': 'The Brave Little Squirrel',
+        'date': '2026-03-10',
+        'level': 'Grade 4',
+      },
       {'title': 'Space Exploration', 'date': '2026-02-09', 'level': 'Grade 5'},
-      {'title': 'The Whispering Trees', 'date': '2026-01-15', 'level': 'Grade 5'},
+      {
+        'title': 'The Whispering Trees',
+        'date': '2026-01-15',
+        'level': 'Grade 5',
+      },
       {'title': 'Nature Trails', 'date': '2025-12-05', 'level': 'Grade 6'},
     ];
 
@@ -67,7 +75,10 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close, color: Colors.white70),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white70,
+                            ),
                           ),
                         ],
                       ),
@@ -86,16 +97,21 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                       Expanded(
                         child: ListView.separated(
                           itemCount: stories.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, idx) {
                             final story = stories[idx];
                             return InkWell(
                               onTap: () {
                                 Navigator.of(context).pop(); // Close popup
-                                final eval = prov.getEvaluationForStudent(student.id);
+                                final eval = prov.getEvaluationForStudent(
+                                  student.id,
+                                );
                                 showDialog(
                                   context: context,
-                                  barrierColor: Colors.black.withValues(alpha: 0.45),
+                                  barrierColor: Colors.black.withValues(
+                                    alpha: 0.45,
+                                  ),
                                   builder: (context) => EvaluationDetailPopup(
                                     student: student,
                                     eval: eval,
@@ -115,11 +131,16 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.menu_book, color: Color(0xFF60A5FA), size: 16),
+                                    const Icon(
+                                      Icons.menu_book,
+                                      color: Color(0xFF60A5FA),
+                                      size: 16,
+                                    ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             story['title']!,
@@ -140,7 +161,11 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                         ],
                                       ),
                                     ),
-                                    const Icon(Icons.chevron_right, color: Colors.white54, size: 16),
+                                    const Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.white54,
+                                      size: 16,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -168,9 +193,14 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
 
     // Filter student list
     final filteredStudents = prov.students.where((student) {
-      final matchesSearch = student.name.toLowerCase().contains(query.toLowerCase());
-      final matchesGrade = selectedGrade == 'All Grades' || student.grade == selectedGrade;
-      final matchesSection = selectedSection == 'All Sections' || student.section == selectedSection;
+      final matchesSearch = student.name.toLowerCase().contains(
+        query.toLowerCase(),
+      );
+      final matchesGrade =
+          selectedGrade == 'All Grades' || student.grade == selectedGrade;
+      final matchesSection =
+          selectedSection == 'All Sections' ||
+          student.section == selectedSection;
       return matchesSearch && matchesGrade && matchesSection;
     }).toList();
 
@@ -231,26 +261,40 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedGrade,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedGrade = newValue!;
                         });
                       },
-                      items: <String>['All Grades', 'Grade 4', 'Grade 5', 'Grade 6']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                      items:
+                          <String>[
+                            'All Grades',
+                            'Grade 4',
+                            'Grade 5',
+                            'Grade 6',
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),
@@ -265,14 +309,23 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedSection,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedSection = newValue!;
@@ -280,11 +333,12 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                       },
                       items: <String>['All Sections', 'Section A', 'Section B']
                           .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          })
+                          .toList(),
                     ),
                   ),
                 ),
@@ -301,7 +355,12 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final student = filteredStudents[index];
-              final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+              final initials = student.name
+                  .split(' ')
+                  .map((e) => e.isNotEmpty ? e[0] : '')
+                  .take(2)
+                  .join()
+                  .toUpperCase();
 
               return InkWell(
                 onTap: () => _showReadingHistoryPopup(context, student),
@@ -358,18 +417,24 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: (student.status.toUpperCase() == 'OUTSTANDING'
-                                      ? const Color(0xFF4ADE80)
-                                      : const Color(0xFFFBBF24))
-                                  .withValues(alpha: 0.2),
+                              color:
+                                  (student.status.toUpperCase() == 'OUTSTANDING'
+                                          ? const Color(0xFF4ADE80)
+                                          : const Color(0xFFFBBF24))
+                                      .withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: (student.status.toUpperCase() == 'OUTSTANDING'
-                                        ? const Color(0xFF4ADE80)
-                                        : const Color(0xFFFBBF24))
-                                    .withValues(alpha: 0.4),
+                                color:
+                                    (student.status.toUpperCase() ==
+                                                'OUTSTANDING'
+                                            ? const Color(0xFF4ADE80)
+                                            : const Color(0xFFFBBF24))
+                                        .withValues(alpha: 0.4),
                               ),
                             ),
                             child: Text(
@@ -377,7 +442,9 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                               style: GoogleFonts.outfit(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: student.status.toUpperCase() == 'OUTSTANDING'
+                                color:
+                                    student.status.toUpperCase() ==
+                                        'OUTSTANDING'
                                     ? const Color(0xFF4ADE80)
                                     : const Color(0xFFFBBF24),
                               ),
@@ -386,16 +453,28 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
+                      Divider(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        thickness: 1,
+                      ),
                       const SizedBox(height: 8),
 
                       // Metrics
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildMetricColumn('Accuracy', '${(student.readingAccuracy * 100).toInt()}%'),
-                          _buildMetricColumn('Vocabulary', '${(student.vocabularyLevel * 100).toInt()}%'),
-                          _buildMetricColumn('Progress', '${student.progressCurrent}/${student.progressTotal}'),
+                          _buildMetricColumn(
+                            'Accuracy',
+                            '${(student.readingAccuracy * 100).toInt()}%',
+                          ),
+                          _buildMetricColumn(
+                            'Vocabulary',
+                            '${(student.vocabularyLevel * 100).toInt()}%',
+                          ),
+                          _buildMetricColumn(
+                            'Progress',
+                            '${student.progressCurrent}/${student.progressTotal}',
+                          ),
                         ],
                       ),
                     ],

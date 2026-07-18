@@ -19,7 +19,9 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
 
   Color _getBadgeColor(String badgeText) {
     final text = badgeText.toLowerCase();
-    if (text.contains('star') || text.contains('boss') || text.contains('super')) {
+    if (text.contains('star') ||
+        text.contains('boss') ||
+        text.contains('super')) {
       return const Color(0xFFFBBF24); // Gold / Amber
     }
     if (text.contains('growing') || text.contains('reader')) {
@@ -42,7 +44,12 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
               (s) => s.id == initialStudent.id,
               orElse: () => initialStudent,
             );
-            final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+            final initials = student.name
+                .split(' ')
+                .map((e) => e.isNotEmpty ? e[0] : '')
+                .take(2)
+                .join()
+                .toUpperCase();
 
             return Center(
               child: Dialog(
@@ -80,12 +87,15 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                               ),
                               IconButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                icon: const Icon(Icons.close, color: Colors.white70),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white70,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          
+
                           // Student Details Row
                           Row(
                             children: [
@@ -159,12 +169,21 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                       children: student.badges.map((badge) {
                                         final color = _getBadgeColor(badge);
                                         return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: color.withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(10),
+                                            color: color.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                             border: Border.all(
-                                              color: color.withValues(alpha: 0.35),
+                                              color: color.withValues(
+                                                alpha: 0.35,
+                                              ),
                                               width: 1.0,
                                             ),
                                           ),
@@ -172,7 +191,8 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Icon(
-                                                Icons.workspace_premium_outlined,
+                                                Icons
+                                                    .workspace_premium_outlined,
                                                 size: 13,
                                                 color: color,
                                               ),
@@ -217,12 +237,20 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                   ),
                                   child: TextField(
                                     controller: addController,
-                                    style: const TextStyle(color: Colors.black, fontSize: 12),
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 12,
+                                    ),
                                     decoration: const InputDecoration(
                                       hintText: 'Badge name...',
-                                      hintStyle: TextStyle(color: Colors.black38),
+                                      hintStyle: TextStyle(
+                                        color: Colors.black38,
+                                      ),
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -232,13 +260,17 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                 onPressed: () {
                                   final text = addController.text.trim();
                                   if (text.isNotEmpty) {
-                                    context.read<TeacherProvider>().addBadgeToStudent(student.id, text);
+                                    context
+                                        .read<TeacherProvider>()
+                                        .addBadgeToStudent(student.id, text);
                                     addController.clear();
                                     setStateDialog(() {});
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('Badge awarded!'),
-                                        backgroundColor: const Color(0xFF10B981),
+                                        backgroundColor: const Color(
+                                          0xFF10B981,
+                                        ),
                                       ),
                                     );
                                   }
@@ -247,7 +279,9 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                   backgroundColor: const Color(0xFF60A5FA),
                                   foregroundColor: Colors.black,
                                   elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -283,9 +317,14 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
     final selectedSection = _selectedSection;
 
     final filteredStudents = prov.students.where((student) {
-      final matchesSearch = student.name.toLowerCase().contains(query.toLowerCase());
-      final matchesGrade = selectedGrade == 'All Grades' || student.grade == selectedGrade;
-      final matchesSection = selectedSection == 'All Sections' || student.section == selectedSection;
+      final matchesSearch = student.name.toLowerCase().contains(
+        query.toLowerCase(),
+      );
+      final matchesGrade =
+          selectedGrade == 'All Grades' || student.grade == selectedGrade;
+      final matchesSection =
+          selectedSection == 'All Sections' ||
+          student.section == selectedSection;
       return matchesSearch && matchesGrade && matchesSection;
     }).toList();
 
@@ -345,26 +384,40 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedGrade,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedGrade = newValue!;
                         });
                       },
-                      items: <String>['All Grades', 'Grade 4', 'Grade 5', 'Grade 6']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                      items:
+                          <String>[
+                            'All Grades',
+                            'Grade 4',
+                            'Grade 5',
+                            'Grade 6',
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),
@@ -377,14 +430,23 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedSection,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedSection = newValue!;
@@ -392,11 +454,12 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                       },
                       items: <String>['All Sections', 'Section A', 'Section B']
                           .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          })
+                          .toList(),
                     ),
                   ),
                 ),
@@ -413,7 +476,12 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final student = filteredStudents[index];
-              final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+              final initials = student.name
+                  .split(' ')
+                  .map((e) => e.isNotEmpty ? e[0] : '')
+                  .take(2)
+                  .join()
+                  .toUpperCase();
 
               return InkWell(
                 onTap: () => _showBadgesPopup(context, student),
@@ -471,7 +539,10 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Divider(color: Colors.white.withValues(alpha: 0.1), thickness: 1),
+                      Divider(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        thickness: 1,
+                      ),
                       const SizedBox(height: 8),
 
                       // Badges preview
@@ -487,62 +558,74 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                           : Wrap(
                               spacing: 6,
                               runSpacing: 6,
-                              children: student.badges.take(3).map((badge) {
-                                final color = _getBadgeColor(badge);
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: color.withValues(alpha: 0.35),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.workspace_premium_outlined,
-                                        size: 11,
-                                        color: color,
+                              children:
+                                  student.badges.take(3).map((badge) {
+                                    final color = _getBadgeColor(badge);
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        badge,
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: color,
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: color.withValues(alpha: 0.35),
+                                          width: 1.0,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                );
-                              }).toList()
-                                ..addAll(student.badges.length > 3
-                                    ? [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(
-                                              color: Colors.white24,
-                                              width: 1.0,
-                                            ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.workspace_premium_outlined,
+                                            size: 11,
+                                            color: color,
                                           ),
-                                          child: Text(
-                                            '+${student.badges.length - 3} More',
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            badge,
                                             style: GoogleFonts.outfit(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: color,
                                             ),
                                           ),
-                                        )
-                                      ]
-                                    : []),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList()..addAll(
+                                    student.badges.length > 3
+                                        ? [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: Colors.white24,
+                                                  width: 1.0,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '+${student.badges.length - 3} More',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ]
+                                        : [],
+                                  ),
                             ),
                     ],
                   ),

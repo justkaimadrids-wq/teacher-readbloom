@@ -19,7 +19,9 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
 
   Color _getBadgeColor(String badgeText) {
     final text = badgeText.toLowerCase();
-    if (text.contains('star') || text.contains('boss') || text.contains('super')) {
+    if (text.contains('star') ||
+        text.contains('boss') ||
+        text.contains('super')) {
       return const Color(0xFFFBBF24); // Gold / Amber
     }
     if (text.contains('growing') || text.contains('reader')) {
@@ -43,7 +45,12 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
               (s) => s.id == initialStudent.id,
               orElse: () => initialStudent,
             );
-            final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+            final initials = student.name
+                .split(' ')
+                .map((e) => e.isNotEmpty ? e[0] : '')
+                .take(2)
+                .join()
+                .toUpperCase();
 
             return Center(
               child: Dialog(
@@ -81,12 +88,15 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                               ),
                               IconButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                icon: const Icon(Icons.close, color: Colors.white70),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white70,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Student Details Row
                           Row(
                             children: [
@@ -156,7 +166,10 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                                   children: student.badges.map((badge) {
                                     final color = _getBadgeColor(badge);
                                     return Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: color.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(14),
@@ -210,16 +223,28 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.white24, width: 1.5),
+                                    border: Border.all(
+                                      color: Colors.white24,
+                                      width: 1.5,
+                                    ),
                                   ),
                                   child: TextField(
                                     controller: addController,
-                                    style: const TextStyle(color: Colors.black, fontSize: 13),
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 13,
+                                    ),
                                     decoration: const InputDecoration(
-                                      hintText: 'Enter badge name (e.g., Bookworm)...',
-                                      hintStyle: TextStyle(color: Colors.black38),
+                                      hintText:
+                                          'Enter badge name (e.g., Bookworm)...',
+                                      hintStyle: TextStyle(
+                                        color: Colors.black38,
+                                      ),
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 12,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -231,17 +256,23 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                                   final text = addController.text.trim();
                                   if (text.isNotEmpty) {
                                     // Call provider to add badge
-                                    context.read<TeacherProvider>().addBadgeToStudent(student.id, text);
+                                    context
+                                        .read<TeacherProvider>()
+                                        .addBadgeToStudent(student.id, text);
                                     addController.clear();
-                                    
+
                                     // Trigger dialog rebuild so new badge shows instantly
                                     setStateDialog(() {});
 
                                     // Show brief snackbar
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Badge "$text" awarded to ${student.name}!'),
-                                        backgroundColor: const Color(0xFF10B981),
+                                        content: Text(
+                                          'Badge "$text" awarded to ${student.name}!',
+                                        ),
+                                        backgroundColor: const Color(
+                                          0xFF10B981,
+                                        ),
                                       ),
                                     );
                                   }
@@ -250,7 +281,10 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                                   backgroundColor: const Color(0xFF60A5FA),
                                   foregroundColor: Colors.black,
                                   elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 15,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -287,9 +321,14 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
 
     // Filter students
     final filteredStudents = prov.students.where((student) {
-      final matchesSearch = student.name.toLowerCase().contains(query.toLowerCase());
-      final matchesGrade = selectedGrade == 'All Grades' || student.grade == selectedGrade;
-      final matchesSection = selectedSection == 'All Sections' || student.section == selectedSection;
+      final matchesSearch = student.name.toLowerCase().contains(
+        query.toLowerCase(),
+      );
+      final matchesGrade =
+          selectedGrade == 'All Grades' || student.grade == selectedGrade;
+      final matchesSection =
+          selectedSection == 'All Sections' ||
+          student.section == selectedSection;
       return matchesSearch && matchesGrade && matchesSection;
     }).toList();
 
@@ -308,10 +347,7 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 border: const Border(
-                  bottom: BorderSide(
-                    color: Colors.white24,
-                    width: 1.5,
-                  ),
+                  bottom: BorderSide(color: Colors.white24, width: 1.5),
                 ),
               ),
               child: Text(
@@ -351,7 +387,10 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                     decoration: InputDecoration(
                       hintText: 'Search student name...',
                       hintStyle: const TextStyle(color: Colors.black38),
-                      prefixIcon: const Icon(Icons.search, color: Colors.black54),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.black54,
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -359,7 +398,7 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Grade Filter Dropdown
               Expanded(
                 flex: 2,
@@ -369,26 +408,40 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedGrade,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedGrade = newValue!;
                         });
                       },
-                      items: <String>['All Grades', 'Grade 4', 'Grade 5', 'Grade 6']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                      items:
+                          <String>[
+                            'All Grades',
+                            'Grade 4',
+                            'Grade 5',
+                            'Grade 6',
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),
@@ -404,14 +457,23 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedSection,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedSection = newValue!;
@@ -419,11 +481,12 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                       },
                       items: <String>['All Sections', 'Section A', 'Section B']
                           .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          })
+                          .toList(),
                     ),
                   ),
                 ),
@@ -441,7 +504,12 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
               separatorBuilder: (context, index) => const SizedBox(height: 20),
               itemBuilder: (context, index) {
                 final student = filteredStudents[index];
-                final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+                final initials = student.name
+                    .split(' ')
+                    .map((e) => e.isNotEmpty ? e[0] : '')
+                    .take(2)
+                    .join()
+                    .toUpperCase();
 
                 return InkWell(
                   onTap: () => _showBadgesPopup(context, student),
@@ -500,7 +568,10 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        Divider(color: Colors.white.withValues(alpha: 0.15), thickness: 1.5),
+                        Divider(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          thickness: 1.5,
+                        ),
                         const SizedBox(height: 16),
 
                         // Badges Wrap list
@@ -516,62 +587,77 @@ class _BadgesWebBodyState extends State<BadgesWebBody> {
                             : Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
-                                children: student.badges.take(3).map((badge) {
-                                  final color = _getBadgeColor(badge);
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: color.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                        color: color.withValues(alpha: 0.35),
-                                        width: 1.2,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.workspace_premium_outlined,
-                                          size: 15,
-                                          color: color,
+                                children:
+                                    student.badges.take(3).map((badge) {
+                                      final color = _getBadgeColor(badge);
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 8,
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          badge,
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: color,
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          border: Border.all(
+                                            color: color.withValues(
+                                              alpha: 0.35,
+                                            ),
+                                            width: 1.2,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList()
-                                  ..addAll(student.badges.length > 3
-                                      ? [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(14),
-                                              border: Border.all(
-                                                color: Colors.white24,
-                                                width: 1.2,
-                                              ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.workspace_premium_outlined,
+                                              size: 15,
+                                              color: color,
                                             ),
-                                            child: Text(
-                                              '+${student.badges.length - 3} More',
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              badge,
                                               style: GoogleFonts.outfit(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.white,
+                                                color: color,
                                               ),
                                             ),
-                                          )
-                                        ]
-                                      : []),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList()..addAll(
+                                      student.badges.length > 3
+                                          ? [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(14),
+                                                  border: Border.all(
+                                                    color: Colors.white24,
+                                                    width: 1.2,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  '+${student.badges.length - 3} More',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ]
+                                          : [],
+                                    ),
                               ),
                       ],
                     ),

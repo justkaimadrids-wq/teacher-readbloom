@@ -23,9 +23,17 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
     final prov = context.read<TeacherProvider>();
     // A mock list of stories read by this student
     final List<Map<String, String>> stories = [
-      {'title': 'The Brave Little Squirrel', 'date': '2026-03-10', 'level': 'Grade 4'},
+      {
+        'title': 'The Brave Little Squirrel',
+        'date': '2026-03-10',
+        'level': 'Grade 4',
+      },
       {'title': 'Space Exploration', 'date': '2026-02-09', 'level': 'Grade 5'},
-      {'title': 'The Whispering Trees', 'date': '2026-01-15', 'level': 'Grade 5'},
+      {
+        'title': 'The Whispering Trees',
+        'date': '2026-01-15',
+        'level': 'Grade 5',
+      },
       {'title': 'Nature Trails', 'date': '2025-12-05', 'level': 'Grade 6'},
     ];
 
@@ -68,7 +76,10 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                           ),
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close, color: Colors.white70),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white70,
+                            ),
                           ),
                         ],
                       ),
@@ -88,16 +99,23 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                         child: ListView.separated(
                           shrinkWrap: true,
                           itemCount: stories.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, idx) {
                             final story = stories[idx];
                             return InkWell(
                               onTap: () {
-                                Navigator.of(context).pop(); // Close reading history popup
-                                final eval = prov.getEvaluationForStudent(student.id);
+                                Navigator.of(
+                                  context,
+                                ).pop(); // Close reading history popup
+                                final eval = prov.getEvaluationForStudent(
+                                  student.id,
+                                );
                                 showDialog(
                                   context: context,
-                                  barrierColor: Colors.black.withValues(alpha: 0.45),
+                                  barrierColor: Colors.black.withValues(
+                                    alpha: 0.45,
+                                  ),
                                   builder: (context) => EvaluationDetailPopup(
                                     student: student,
                                     eval: eval,
@@ -125,7 +143,8 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             story['title']!,
@@ -204,9 +223,14 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
 
     // Filtering logic
     final filteredStudents = prov.students.where((student) {
-      final matchesSearch = student.name.toLowerCase().contains(query.toLowerCase());
-      final matchesGrade = selectedGrade == 'All Grades' || student.grade == selectedGrade;
-      final matchesSection = selectedSection == 'All Sections' || student.section == selectedSection;
+      final matchesSearch = student.name.toLowerCase().contains(
+        query.toLowerCase(),
+      );
+      final matchesGrade =
+          selectedGrade == 'All Grades' || student.grade == selectedGrade;
+      final matchesSection =
+          selectedSection == 'All Sections' ||
+          student.section == selectedSection;
       return matchesSearch && matchesGrade && matchesSection;
     }).toList();
 
@@ -242,7 +266,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
             ),
           ),
         ),
-        
+
         // Search & Filtering Bar
         Padding(
           padding: const EdgeInsets.fromLTRB(28.0, 24.0, 28.0, 12.0),
@@ -268,7 +292,10 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                     decoration: InputDecoration(
                       hintText: 'Search student name...',
                       hintStyle: const TextStyle(color: Colors.black38),
-                      prefixIcon: const Icon(Icons.search, color: Colors.black54),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.black54,
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -276,7 +303,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Grade Filter Dropdown
               Expanded(
                 flex: 2,
@@ -286,26 +313,40 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedGrade,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedGrade = newValue!;
                         });
                       },
-                      items: <String>['All Grades', 'Grade 4', 'Grade 5', 'Grade 6']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                      items:
+                          <String>[
+                            'All Grades',
+                            'Grade 4',
+                            'Grade 5',
+                            'Grade 6',
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),
@@ -321,14 +362,23 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedSection,
                       dropdownColor: const Color(0xFF1E293B),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                      ),
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedSection = newValue!;
@@ -336,11 +386,12 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                       },
                       items: <String>['All Sections', 'Section A', 'Section B']
                           .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          })
+                          .toList(),
                     ),
                   ),
                 ),
@@ -358,13 +409,21 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final student = filteredStudents[index];
-                final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+                final initials = student.name
+                    .split(' ')
+                    .map((e) => e.isNotEmpty ? e[0] : '')
+                    .take(2)
+                    .join()
+                    .toUpperCase();
 
                 return InkWell(
                   onTap: () => _showReadingHistoryPopup(context, student),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(16),
@@ -389,7 +448,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        
+
                         // Smaller Name + Grade/Section Subtitle
                         Expanded(
                           child: Column(
@@ -421,27 +480,43 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildMetricLabel('Accuracy', '${(student.readingAccuracy * 100).toInt()}%'),
+                            _buildMetricLabel(
+                              'Accuracy',
+                              '${(student.readingAccuracy * 100).toInt()}%',
+                            ),
                             const SizedBox(width: 24),
-                            _buildMetricLabel('Vocabulary', '${(student.vocabularyLevel * 100).toInt()}%'),
+                            _buildMetricLabel(
+                              'Vocabulary',
+                              '${(student.vocabularyLevel * 100).toInt()}%',
+                            ),
                             const SizedBox(width: 24),
-                            _buildMetricLabel('Progress', '${student.progressCurrent}/${student.progressTotal}'),
+                            _buildMetricLabel(
+                              'Progress',
+                              '${student.progressCurrent}/${student.progressTotal}',
+                            ),
                             const SizedBox(width: 28),
-                            
+
                             // Compact status badge
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: (student.status.toUpperCase() == 'OUTSTANDING'
-                                        ? const Color(0xFF4ADE80)
-                                        : const Color(0xFFFBBF24))
-                                    .withValues(alpha: 0.2),
+                                color:
+                                    (student.status.toUpperCase() ==
+                                                'OUTSTANDING'
+                                            ? const Color(0xFF4ADE80)
+                                            : const Color(0xFFFBBF24))
+                                        .withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: (student.status.toUpperCase() == 'OUTSTANDING'
-                                          ? const Color(0xFF4ADE80)
-                                          : const Color(0xFFFBBF24))
-                                      .withValues(alpha: 0.4),
+                                  color:
+                                      (student.status.toUpperCase() ==
+                                                  'OUTSTANDING'
+                                              ? const Color(0xFF4ADE80)
+                                              : const Color(0xFFFBBF24))
+                                          .withValues(alpha: 0.4),
                                 ),
                               ),
                               child: Text(
@@ -449,7 +524,9 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: student.status.toUpperCase() == 'OUTSTANDING'
+                                  color:
+                                      student.status.toUpperCase() ==
+                                          'OUTSTANDING'
                                       ? const Color(0xFF4ADE80)
                                       : const Color(0xFFFBBF24),
                                 ),

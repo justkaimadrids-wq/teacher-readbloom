@@ -69,7 +69,7 @@ class DashboardMobileBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 28),
-        
+
         // Student Progress lists quick view
         Container(
           padding: const EdgeInsets.all(20),
@@ -93,7 +93,10 @@ class DashboardMobileBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Divider(color: Colors.white.withValues(alpha: 0.15), thickness: 1.5),
+              Divider(
+                color: Colors.white.withValues(alpha: 0.15),
+                thickness: 1.5,
+              ),
               const SizedBox(height: 12),
               ...prov.students.map(
                 (student) => ListTile(
@@ -134,7 +137,9 @@ class DashboardMobileBody extends StatelessWidget {
 
   Widget _buildClassCard(ClassStats cls) {
     Color accentColor = const Color(0xFF4ADE80); // Green
-    if (cls.grade.contains('5')) accentColor = const Color(0xFFC084FC); // Purple
+    if (cls.grade.contains('5')) {
+      accentColor = const Color(0xFFC084FC); // Purple
+    }
     if (cls.grade.contains('6')) accentColor = const Color(0xFFFBBF24); // Gold
 
     return Container(
@@ -171,7 +176,10 @@ class DashboardMobileBody extends StatelessWidget {
           const SizedBox(height: 16),
           _buildClassStatRow('Total Students', '${cls.totalStudents}'),
           const SizedBox(height: 4),
-          _buildClassStatRow('Completion', '${(cls.completionRate * 100).toInt()}%'),
+          _buildClassStatRow(
+            'Completion',
+            '${(cls.completionRate * 100).toInt()}%',
+          ),
           const SizedBox(height: 4),
           _buildClassStatRow('Total Lessons', '${cls.totalLessons}'),
         ],
@@ -283,9 +291,21 @@ class DashboardMobileBody extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Legend
-          _buildLegendRow(const Color(0xFF60A5FA), 'INDEPENDENT (90-100%)', '55%'),
-          _buildLegendRow(const Color(0xFFC084FC), 'INSTRUCTIONAL (75-89%)', '25%'),
-          _buildLegendRow(const Color(0xFFFBBF24), 'STRUGGLING (50-74%)', '15%'),
+          _buildLegendRow(
+            const Color(0xFF60A5FA),
+            'INDEPENDENT (90-100%)',
+            '55%',
+          ),
+          _buildLegendRow(
+            const Color(0xFFC084FC),
+            'INSTRUCTIONAL (75-89%)',
+            '25%',
+          ),
+          _buildLegendRow(
+            const Color(0xFFFBBF24),
+            'STRUGGLING (50-74%)',
+            '15%',
+          ),
           _buildLegendRow(const Color(0xFFF87171), 'NON-READER (0-49%)', '5%'),
         ],
       ),

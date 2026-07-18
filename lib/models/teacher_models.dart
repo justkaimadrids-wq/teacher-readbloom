@@ -76,6 +76,7 @@ class Book {
   final String grade;
   final String section;
   final String content;
+  final List<BookQuestion> questions;
 
   Book({
     required this.id,
@@ -83,6 +84,32 @@ class Book {
     required this.grade,
     required this.section,
     required this.content,
+    this.questions = const [],
   });
 }
 
+class BookQuestion {
+  final String id;
+  final String questionText;
+  final List<String> options;
+  final int correctOptionIndex;
+
+  const BookQuestion({
+    required this.id,
+    required this.questionText,
+    required this.options,
+    required this.correctOptionIndex,
+  });
+}
+
+class BookQuestionInput {
+  final String questionText;
+  final List<String> options;
+  final int correctOptionIndex;
+
+  const BookQuestionInput({
+    required this.questionText,
+    required this.options,
+    required this.correctOptionIndex,
+  });
+}

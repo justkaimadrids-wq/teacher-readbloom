@@ -94,10 +94,27 @@ class LoginWebBody extends StatelessWidget {
 
                 // Log In Button (Yellow Plain Capsule)
                 InkWell(
-                  onTap: () {
-                    context.read<TeacherProvider>().login(
+                  onTap: () async {
+                    final result = await context.read<TeacherProvider>().login(
                       emailController.text.trim(),
                       passwordController.text.trim(),
+                    );
+                    if (result.success || !context.mounted) return;
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Cannot login'),
+                        content: Text(
+                          result.message ??
+                              'Credentials not found or incorrect.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      ),
                     );
                   },
                   child: Container(
@@ -126,6 +143,36 @@ class LoginWebBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await context
+                          .read<TeacherProvider>()
+                          .sendPasswordResetEmail(emailController.text.trim());
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Password reset email sent if the account exists.',
+                          ),
+                        ),
+                      );
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Unable to send reset email right now.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    'Forgot password?',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
           ),
@@ -176,7 +223,10 @@ class LoginWebBody extends StatelessWidget {
           color: Colors.black38,
           fontWeight: FontWeight.w500,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide.none,

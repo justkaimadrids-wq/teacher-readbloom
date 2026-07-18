@@ -87,7 +87,10 @@ class DashboardWebBody extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -111,7 +114,11 @@ class DashboardWebBody extends StatelessWidget {
 
                   // Glassmorphic Classes Card Row
                   Row(
-                    children: prov.classes.map((cls) => Expanded(child: _buildGlassClassCard(cls))).toList(),
+                    children: prov.classes
+                        .map(
+                          (cls) => Expanded(child: _buildGlassClassCard(cls)),
+                        )
+                        .toList(),
                   ),
                   const SizedBox(height: 32),
 
@@ -124,10 +131,7 @@ class DashboardWebBody extends StatelessWidget {
                         child: _buildGlassStudentProgressList(context, prov),
                       ),
                       const SizedBox(width: 28),
-                      Expanded(
-                        flex: 2,
-                        child: _buildGlassPerformanceChart(),
-                      ),
+                      Expanded(flex: 2, child: _buildGlassPerformanceChart()),
                     ],
                   ),
                 ],
@@ -157,7 +161,10 @@ class DashboardWebBody extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +175,10 @@ class DashboardWebBody extends StatelessWidget {
             decoration: BoxDecoration(
               color: lightBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: accentColor.withValues(alpha: 0.4), width: 1),
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.4),
+                width: 1,
+              ),
             ),
             child: Text(
               cls.grade,
@@ -182,13 +192,25 @@ class DashboardWebBody extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Metrics
-          _buildGlassMetricRow('Total of Students', '${cls.totalStudents}', accentColor),
+          _buildGlassMetricRow(
+            'Total of Students',
+            '${cls.totalStudents}',
+            accentColor,
+          ),
           Divider(color: Colors.white.withValues(alpha: 0.15), height: 24),
 
-          _buildGlassMetricRow('Completion', '${(cls.completionRate * 100).toInt()}%', accentColor),
+          _buildGlassMetricRow(
+            'Completion',
+            '${(cls.completionRate * 100).toInt()}%',
+            accentColor,
+          ),
           Divider(color: Colors.white.withValues(alpha: 0.15), height: 24),
 
-          _buildGlassMetricRow('Total Lessons', '${cls.totalLessons}', accentColor),
+          _buildGlassMetricRow(
+            'Total Lessons',
+            '${cls.totalLessons}',
+            accentColor,
+          ),
         ],
       ),
     );
@@ -219,13 +241,19 @@ class DashboardWebBody extends StatelessWidget {
     );
   }
 
-  Widget _buildGlassStudentProgressList(BuildContext context, TeacherProvider prov) {
+  Widget _buildGlassStudentProgressList(
+    BuildContext context,
+    TeacherProvider prov,
+  ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,15 +289,24 @@ class DashboardWebBody extends StatelessWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final student = prov.students[index];
-              final initials = student.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
-              final progressPct = student.progressTotal > 0 ? (student.progressCurrent / student.progressTotal) : 0.0;
+              final initials = student.name
+                  .split(' ')
+                  .map((e) => e.isNotEmpty ? e[0] : '')
+                  .take(2)
+                  .join()
+                  .toUpperCase();
+              final progressPct = student.progressTotal > 0
+                  ? (student.progressCurrent / student.progressTotal)
+                  : 0.0;
 
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -312,7 +349,10 @@ class DashboardWebBody extends StatelessWidget {
                               const SizedBox(width: 12),
                               Text(
                                 '•',
-                                style: TextStyle(color: Colors.white60, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: Colors.white60,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(
@@ -330,8 +370,12 @@ class DashboardWebBody extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: progressPct.toDouble(),
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                               minHeight: 6,
                             ),
                           ),
@@ -345,10 +389,16 @@ class DashboardWebBody extends StatelessWidget {
                         backgroundColor: Colors.white.withValues(alpha: 0.25),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3), width: 1),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                         ),
                       ),
                       child: Text(
@@ -375,7 +425,10 @@ class DashboardWebBody extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,13 +511,29 @@ class DashboardWebBody extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _buildLegendRow(const Color(0xFF60A5FA), 'INDEPENDENT (90-100%)', '35%'),
+                _buildLegendRow(
+                  const Color(0xFF60A5FA),
+                  'INDEPENDENT (90-100%)',
+                  '35%',
+                ),
                 const SizedBox(height: 8),
-                _buildLegendRow(const Color(0xFF34D399), 'INSTRUCTIONAL (75-89%)', '35%'),
+                _buildLegendRow(
+                  const Color(0xFF34D399),
+                  'INSTRUCTIONAL (75-89%)',
+                  '35%',
+                ),
                 const SizedBox(height: 8),
-                _buildLegendRow(const Color(0xFFFBBF24), 'STRUGGLING (50-74%)', '20%'),
+                _buildLegendRow(
+                  const Color(0xFFFBBF24),
+                  'STRUGGLING (50-74%)',
+                  '20%',
+                ),
                 const SizedBox(height: 8),
-                _buildLegendRow(const Color(0xFFF87171), 'NON-READER (0-49%)', '10%'),
+                _buildLegendRow(
+                  const Color(0xFFF87171),
+                  'NON-READER (0-49%)',
+                  '10%',
+                ),
               ],
             ),
           ),

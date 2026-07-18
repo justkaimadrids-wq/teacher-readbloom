@@ -29,10 +29,12 @@ class DashedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(borderRadius),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(borderRadius),
+        ),
+      );
 
     final dashPath = _buildDashedPath(path, dashLength, gap);
     canvas.drawPath(dashPath, paint);
@@ -118,7 +120,11 @@ class EvaluationDetailPopup extends StatelessWidget {
     required this.storyTitle,
   });
 
-  void _showWriteFeedbackPopup(BuildContext context, StudentProgress student, EvaluationMetrics eval) {
+  void _showWriteFeedbackPopup(
+    BuildContext context,
+    StudentProgress student,
+    EvaluationMetrics eval,
+  ) {
     final controller = TextEditingController(text: eval.feedback);
 
     showDialog(
@@ -169,15 +175,15 @@ class EvaluationDetailPopup extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white24,
-                            width: 1.5,
-                          ),
+                          border: Border.all(color: Colors.white24, width: 1.5),
                         ),
                         child: TextField(
                           controller: controller,
                           maxLines: 4,
-                          style: const TextStyle(color: Colors.black, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 13,
+                          ),
                           decoration: const InputDecoration(
                             hintText: 'Enter feedback message here...',
                             hintStyle: TextStyle(color: Colors.black38),
@@ -215,7 +221,9 @@ class EvaluationDetailPopup extends StatelessWidget {
                               Navigator.of(dialogContext).pop();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Feedback successfully sent to ${student.name}!'),
+                                  content: Text(
+                                    'Feedback successfully sent to ${student.name}!',
+                                  ),
                                   backgroundColor: const Color(0xFF10B981),
                                 ),
                               );
@@ -265,9 +273,13 @@ class EvaluationDetailPopup extends StatelessWidget {
             child: Container(
               width: isMobile ? double.infinity : 1000,
               constraints: BoxConstraints(
-                maxHeight: isMobile ? MediaQuery.of(context).size.height * 0.85 : 700,
+                maxHeight: isMobile
+                    ? MediaQuery.of(context).size.height * 0.85
+                    : 700,
               ),
-              padding: isMobile ? const EdgeInsets.all(20) : const EdgeInsets.all(32),
+              padding: isMobile
+                  ? const EdgeInsets.all(20)
+                  : const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.45),
                 borderRadius: BorderRadius.circular(28),
@@ -326,7 +338,10 @@ class EvaluationDetailPopup extends StatelessWidget {
                                 // Left Column (Avatar + Actions)
                                 SizedBox(
                                   width: 250,
-                                  child: _buildLeftColumn(context, isMobile: false),
+                                  child: _buildLeftColumn(
+                                    context,
+                                    isMobile: false,
+                                  ),
                                 ),
                                 const SizedBox(width: 28),
                                 // Right Column (Metrics + Story Text)
@@ -425,17 +440,47 @@ class EvaluationDetailPopup extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _buildPopupErrorTile('OMISSION', eval.omissions > 0 ? eval.omissions : 2, Colors.red, isMobile: true)),
+                      Expanded(
+                        child: _buildPopupErrorTile(
+                          'OMISSION',
+                          eval.omissions > 0 ? eval.omissions : 2,
+                          Colors.red,
+                          isMobile: true,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _buildPopupErrorTile('REPETITION', eval.repetitions > 0 ? eval.repetitions : 3, const Color(0xFFF472B6), isMobile: true)),
+                      Expanded(
+                        child: _buildPopupErrorTile(
+                          'REPETITION',
+                          eval.repetitions > 0 ? eval.repetitions : 3,
+                          const Color(0xFFF472B6),
+                          isMobile: true,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: _buildPopupErrorTile('SELF CORRECTION', eval.selfCorrections > 0 ? eval.selfCorrections : 4, const Color(0xFF10B981), isMobile: true)),
+                      Expanded(
+                        child: _buildPopupErrorTile(
+                          'SELF CORRECTION',
+                          eval.selfCorrections > 0 ? eval.selfCorrections : 4,
+                          const Color(0xFF10B981),
+                          isMobile: true,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _buildPopupErrorTile('MISPRONUNCIATION', eval.mispronunciations > 0 ? eval.mispronunciations : 5, const Color(0xFFEAB308), isMobile: true)),
+                      Expanded(
+                        child: _buildPopupErrorTile(
+                          'MISPRONUNCIATION',
+                          eval.mispronunciations > 0
+                              ? eval.mispronunciations
+                              : 5,
+                          const Color(0xFFEAB308),
+                          isMobile: true,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -443,13 +488,41 @@ class EvaluationDetailPopup extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: _buildPopupErrorTile('OMISSION', eval.omissions > 0 ? eval.omissions : 2, Colors.red, isMobile: false)),
+                  Expanded(
+                    child: _buildPopupErrorTile(
+                      'OMISSION',
+                      eval.omissions > 0 ? eval.omissions : 2,
+                      Colors.red,
+                      isMobile: false,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildPopupErrorTile('REPETITION', eval.repetitions > 0 ? eval.repetitions : 3, const Color(0xFFF472B6), isMobile: false)),
+                  Expanded(
+                    child: _buildPopupErrorTile(
+                      'REPETITION',
+                      eval.repetitions > 0 ? eval.repetitions : 3,
+                      const Color(0xFFF472B6),
+                      isMobile: false,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildPopupErrorTile('SELF CORRECTION', eval.selfCorrections > 0 ? eval.selfCorrections : 4, const Color(0xFF10B981), isMobile: false)),
+                  Expanded(
+                    child: _buildPopupErrorTile(
+                      'SELF CORRECTION',
+                      eval.selfCorrections > 0 ? eval.selfCorrections : 4,
+                      const Color(0xFF10B981),
+                      isMobile: false,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildPopupErrorTile('MISPRONUNCIATION', eval.mispronunciations > 0 ? eval.mispronunciations : 5, const Color(0xFFEAB308), isMobile: false)),
+                  Expanded(
+                    child: _buildPopupErrorTile(
+                      'MISPRONUNCIATION',
+                      eval.mispronunciations > 0 ? eval.mispronunciations : 5,
+                      const Color(0xFFEAB308),
+                      isMobile: false,
+                    ),
+                  ),
                 ],
               ),
         const SizedBox(height: 24),
@@ -460,7 +533,12 @@ class EvaluationDetailPopup extends StatelessWidget {
     );
   }
 
-  Widget _buildPopupErrorTile(String title, int count, Color textColor, {required bool isMobile}) {
+  Widget _buildPopupErrorTile(
+    String title,
+    int count,
+    Color textColor, {
+    required bool isMobile,
+  }) {
     return DashedContainer(
       color: Colors.black,
       backgroundColor: Colors.white,
@@ -513,37 +591,132 @@ class EvaluationDetailPopup extends StatelessWidget {
               ),
               children: [
                 // Paragraph 1
-                const TextSpan(text: 'Once there were two friends a ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'squirrel ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'Once there were two friends a ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'squirrel ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'and a puppy. They '),
-                const TextSpan(text: 'used ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'used ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'to '),
-                const TextSpan(text: 'live ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and '),
-                const TextSpan(text: 'thought ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'live ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and ',
+                ),
+                const TextSpan(
+                  text: 'thought ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'that it was of no use.\n\n'),
 
                 // Paragraph 2
                 const TextSpan(text: 'One day, it started raining '),
-                const TextSpan(text: 'heavily', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'heavily',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: '. The squirrel was in '),
-                const TextSpan(text: 'high ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'high ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'spirits. He started doing '),
-                const TextSpan(text: 'antics ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'antics ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'but '),
-                const TextSpan(text: 'suddenly', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'suddenly',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: ', '),
-                const TextSpan(text: 'lost ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
-                const TextSpan(text: 'his balance and fell in the rain water.\n\n', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'lost ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'his balance and fell in the rain water.\n\n',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
                 // Paragraph 3
                 const TextSpan(text: 'He '),
-                const TextSpan(text: 'called ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'his friend, the puppy for help. The puppy '),
-                const TextSpan(text: 'came ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'to his rescue. The squirrel climbed on its back and '),
-                const TextSpan(text: 'reached ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'a safe place. He thanked his friend for saving his life.'),
+                const TextSpan(
+                  text: 'called ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'his friend, the puppy for help. The puppy ',
+                ),
+                const TextSpan(
+                  text: 'came ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'to his rescue. The squirrel climbed on its back and ',
+                ),
+                const TextSpan(
+                  text: 'reached ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      'a safe place. He thanked his friend for saving his life.',
+                ),
               ],
             ),
           ),

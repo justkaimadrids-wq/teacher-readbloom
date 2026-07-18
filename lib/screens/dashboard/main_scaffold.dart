@@ -46,10 +46,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
         image: DecorationImage(
           image: AssetImage('lib/assets/bg-web.png'),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black54,
-            BlendMode.darken,
-          ),
+          colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
         ),
       ),
       child: Column(
@@ -114,10 +111,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
         image: DecorationImage(
           image: AssetImage('lib/assets/bg-web.png'),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black54,
-            BlendMode.darken,
-          ),
+          colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
         ),
       ),
       child: Row(
@@ -140,7 +134,11 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                 child: Column(
                   children: [
                     const SizedBox(height: 32),
-                    Image.asset('lib/assets/logo-icon.png', height: 70, width: 70),
+                    Image.asset(
+                      'lib/assets/logo-icon.png',
+                      height: 70,
+                      width: 70,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'ReadBloom',
@@ -161,7 +159,11 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                     ),
                     const SizedBox(height: 32),
                     _buildSidebarItem(0, Icons.dashboard_outlined, 'Dashboard'),
-                    _buildSidebarItem(1, Icons.list_alt_outlined, 'Students Progress'),
+                    _buildSidebarItem(
+                      1,
+                      Icons.list_alt_outlined,
+                      'Students Progress',
+                    ),
                     _buildSidebarItem(2, Icons.menu_book_outlined, 'Books'),
                     _buildSidebarItem(3, Icons.history, 'Activity Log'),
                     _buildSidebarItem(4, Icons.workspace_premium, 'Badges'),
@@ -245,22 +247,33 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
+          color: isActive
+              ? Colors.white.withValues(alpha: 0.25)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isActive ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
+            color: isActive
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.transparent,
             width: 1.5,
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.85)),
+            Icon(
+              icon,
+              color: isActive
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.85),
+            ),
             const SizedBox(width: 14),
             Text(
               label,
               style: GoogleFonts.outfit(
                 fontSize: 14,
-                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.85),
+                color: isActive
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.85),
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),

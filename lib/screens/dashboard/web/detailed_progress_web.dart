@@ -29,10 +29,12 @@ class DashedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(borderRadius),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(borderRadius),
+        ),
+      );
 
     final dashPath = _buildDashedPath(path, dashLength, gap);
     canvas.drawPath(dashPath, paint);
@@ -111,7 +113,8 @@ class DetailedProgressWebBody extends StatefulWidget {
   const DetailedProgressWebBody({super.key, required this.onBack});
 
   @override
-  State<DetailedProgressWebBody> createState() => _DetailedProgressWebBodyState();
+  State<DetailedProgressWebBody> createState() =>
+      _DetailedProgressWebBodyState();
 }
 
 class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
@@ -123,7 +126,9 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
     final prov = context.read<TeacherProvider>();
     final student = prov.selectedStudentForEvaluation;
     if (student != null) {
-      _feedbackController.text = prov.getEvaluationForStudent(student.id).feedback;
+      _feedbackController.text = prov
+          .getEvaluationForStudent(student.id)
+          .feedback;
     }
   }
 
@@ -133,7 +138,10 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
     final student = prov.selectedStudentForEvaluation;
     if (student == null) {
       return Center(
-        child: Text('No student selected.', style: GoogleFonts.outfit(color: Colors.white)),
+        child: Text(
+          'No student selected.',
+          style: GoogleFonts.outfit(color: Colors.white),
+        ),
       );
     }
 
@@ -155,10 +163,7 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
                   border: const Border(
-                    bottom: BorderSide(
-                      color: Colors.white24,
-                      width: 1.5,
-                    ),
+                    bottom: BorderSide(color: Colors.white24, width: 1.5),
                   ),
                 ),
                 child: Row(
@@ -197,9 +202,7 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
                     ),
                     const SizedBox(width: 28),
                     // Right Column (Metrics + Story Text)
-                    Expanded(
-                      child: _buildRightColumn(eval),
-                    ),
+                    Expanded(child: _buildRightColumn(eval)),
                   ],
                 ),
               ),
@@ -320,13 +323,37 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(child: _buildPopupErrorTile('OMISSION', eval.omissions > 0 ? eval.omissions : 2, Colors.red)),
+            Expanded(
+              child: _buildPopupErrorTile(
+                'OMISSION',
+                eval.omissions > 0 ? eval.omissions : 2,
+                Colors.red,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildPopupErrorTile('REPETITION', eval.repetitions > 0 ? eval.repetitions : 3, const Color(0xFFF472B6))), // Pinkish
+            Expanded(
+              child: _buildPopupErrorTile(
+                'REPETITION',
+                eval.repetitions > 0 ? eval.repetitions : 3,
+                const Color(0xFFF472B6),
+              ),
+            ), // Pinkish
             const SizedBox(width: 12),
-            Expanded(child: _buildPopupErrorTile('SELF CORRECTION', eval.selfCorrections > 0 ? eval.selfCorrections : 4, const Color(0xFF10B981))), // Emerald green
+            Expanded(
+              child: _buildPopupErrorTile(
+                'SELF CORRECTION',
+                eval.selfCorrections > 0 ? eval.selfCorrections : 4,
+                const Color(0xFF10B981),
+              ),
+            ), // Emerald green
             const SizedBox(width: 12),
-            Expanded(child: _buildPopupErrorTile('MISPRONUNCIATION', eval.mispronunciations > 0 ? eval.mispronunciations : 5, const Color(0xFFEAB308))), // Amber yellow
+            Expanded(
+              child: _buildPopupErrorTile(
+                'MISPRONUNCIATION',
+                eval.mispronunciations > 0 ? eval.mispronunciations : 5,
+                const Color(0xFFEAB308),
+              ),
+            ), // Amber yellow
           ],
         ),
         const SizedBox(height: 28),
@@ -389,37 +416,132 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
               ),
               children: [
                 // Paragraph 1
-                const TextSpan(text: 'Once there were two friends a ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'squirrel ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'Once there were two friends a ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'squirrel ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'and a puppy. They '),
-                const TextSpan(text: 'used ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'used ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'to '),
-                const TextSpan(text: 'live ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and '),
-                const TextSpan(text: 'thought ', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'live ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and ',
+                ),
+                const TextSpan(
+                  text: 'thought ',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'that it was of no use.\n\n'),
 
                 // Paragraph 2
                 const TextSpan(text: 'One day, it started raining '),
-                const TextSpan(text: 'heavily', style: TextStyle(color: Color(0xFFEAB308), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'heavily',
+                  style: TextStyle(
+                    color: Color(0xFFEAB308),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: '. The squirrel was in '),
-                const TextSpan(text: 'high ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'high ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'spirits. He started doing '),
-                const TextSpan(text: 'antics ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'antics ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: 'but '),
-                const TextSpan(text: 'suddenly', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'suddenly',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const TextSpan(text: ', '),
-                const TextSpan(text: 'lost ', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
-                const TextSpan(text: 'his balance and fell in the rain water.\n\n', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                const TextSpan(
+                  text: 'lost ',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'his balance and fell in the rain water.\n\n',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
                 // Paragraph 3
                 const TextSpan(text: 'He '),
-                const TextSpan(text: 'called ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'his friend, the puppy for help. The puppy '),
-                const TextSpan(text: 'came ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'to his rescue. The squirrel climbed on its back and '),
-                const TextSpan(text: 'reached ', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                const TextSpan(text: 'a safe place. He thanked his friend for saving his life.'),
+                const TextSpan(
+                  text: 'called ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'his friend, the puppy for help. The puppy ',
+                ),
+                const TextSpan(
+                  text: 'came ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text: 'to his rescue. The squirrel climbed on its back and ',
+                ),
+                const TextSpan(
+                  text: 'reached ',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      'a safe place. He thanked his friend for saving his life.',
+                ),
               ],
             ),
           ),

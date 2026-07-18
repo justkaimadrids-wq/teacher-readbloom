@@ -109,10 +109,29 @@ class LoginMobileBody extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<TeacherProvider>().login(
-                        emailController.text.trim(),
-                        passwordController.text.trim(),
+                    onPressed: () async {
+                      final result = await context
+                          .read<TeacherProvider>()
+                          .login(
+                            emailController.text.trim(),
+                            passwordController.text.trim(),
+                          );
+                      if (result.success || !context.mounted) return;
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Cannot login'),
+                          content: Text(
+                            result.message ??
+                                'Credentials not found or incorrect.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                       );
                     },
                     icon: const Icon(Icons.login),
@@ -120,6 +139,33 @@ class LoginMobileBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await context
+                          .read<TeacherProvider>()
+                          .sendPasswordResetEmail(emailController.text.trim());
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Password reset email sent if the account exists.',
+                          ),
+                        ),
+                      );
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Unable to send reset email right now.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Forgot password?'),
+                ),
               ],
             ),
           ),
