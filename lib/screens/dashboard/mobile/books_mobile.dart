@@ -266,15 +266,6 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              ...List.generate(
-                                _questionDrafts.length,
-                                (index) => _buildQuestionFields(
-                                  setDialogState,
-                                  _questionDrafts[index],
-                                  index,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
 
                               // Content Field
                               Text(
@@ -314,6 +305,15 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                                 },
                               ),
                               const SizedBox(height: 20),
+                              ...List.generate(
+                                _questionDrafts.length,
+                                (index) => _buildQuestionFields(
+                                  setDialogState,
+                                  _questionDrafts[index],
+                                  index,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
 
                               // Save button
                               SizedBox(
@@ -576,6 +576,7 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                         child: SingleChildScrollView(
                           child: Text(
                             book.content,
+                            textAlign: TextAlign.left,
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               height: 1.5,
@@ -695,15 +696,6 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.w900,
                                         color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${book.grade} • ${book.section}',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 11,
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],

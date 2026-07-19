@@ -252,9 +252,6 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
 
   Widget _buildSubmissionSummary() {
     final selectedSubmission = widget.submission;
-    final accuracy = selectedSubmission?.readingAccuracy == null
-        ? 'Pending'
-        : '${(selectedSubmission!.readingAccuracy! * 100).round()}%';
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -266,7 +263,6 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _summaryText('Submitted', selectedSubmission?.submittedAtLabel ?? ''),
-          _summaryText('Accuracy', accuracy),
           _summaryText(
             'Quiz',
             selectedSubmission == null
@@ -365,6 +361,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     final words = _transcriptWords;
     return _buildTextContainer(
       title: 'Transcribed Text',
+      height: isMobile ? 260 : 380,
       child: words.isEmpty
           ? _emptyText('Transcript is not available yet.')
           : Wrap(
@@ -423,6 +420,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     final passage = widget.submission?.passageText.trim() ?? '';
     return _buildTextContainer(
       title: 'Actual Passage Text',
+      height: isMobile ? 260 : 380,
       child: passage.isEmpty
           ? _emptyText('Actual passage text is not available.')
           : Text(
@@ -437,9 +435,14 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     );
   }
 
-  Widget _buildTextContainer({required String title, required Widget child}) {
+  Widget _buildTextContainer({
+    required String title,
+    required double height,
+    required Widget child,
+  }) {
     return Container(
       width: double.infinity,
+      height: height,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -458,7 +461,14 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
             ),
           ),
           const SizedBox(height: 10),
-          child,
+          Expanded(
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                primary: false,
+                child: Align(alignment: Alignment.topLeft, child: child),
+              ),
+            ),
+          ),
         ],
       ),
     );

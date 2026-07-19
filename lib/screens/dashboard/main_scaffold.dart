@@ -209,7 +209,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                                   ),
                                 ),
                                 Text(
-                                  'ADMINISTRATOR',
+                                  'TEACHER',
                                   style: GoogleFonts.outfit(
                                     fontSize: 9,
                                     color: Colors.white60,

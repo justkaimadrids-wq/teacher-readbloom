@@ -98,7 +98,6 @@ class ProfileWebBody extends StatelessWidget {
 
                       // Info Rows
                       _buildInfoRow('Email Address', prov.email),
-                      _buildInfoRow('Role', 'Subject Teacher'),
                       _buildInfoRow('Last Log In', '4/19/2026'),
 
                       const SizedBox(height: 32),

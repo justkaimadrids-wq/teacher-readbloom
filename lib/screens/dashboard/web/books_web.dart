@@ -317,15 +317,6 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                 ],
                               ),
                               const SizedBox(height: 16),
-                              ...List.generate(
-                                _questionDrafts.length,
-                                (index) => _buildQuestionFields(
-                                  setDialogState,
-                                  _questionDrafts[index],
-                                  index,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
 
                               // Content Field
                               Text(
@@ -366,6 +357,15 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                 },
                               ),
                               const SizedBox(height: 24),
+                              ...List.generate(
+                                _questionDrafts.length,
+                                (index) => _buildQuestionFields(
+                                  setDialogState,
+                                  _questionDrafts[index],
+                                  index,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
 
                               // Submit Button
                               SizedBox(
@@ -613,7 +613,7 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Target: ${book.grade} • ${book.section}',
+                                  '${book.grade} • ${book.section}',
                                   style: GoogleFonts.outfit(
                                     fontSize: 12,
                                     color: Colors.white70,
@@ -639,6 +639,7 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                         child: SingleChildScrollView(
                           child: Text(
                             book.content,
+                            textAlign: TextAlign.left,
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               height: 1.6,
@@ -799,15 +800,6 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                         fontSize: 16,
                                         fontWeight: FontWeight.w900,
                                         color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Target: ${book.grade} • ${book.section}',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 12,
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],

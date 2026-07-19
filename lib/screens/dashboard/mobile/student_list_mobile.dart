@@ -152,7 +152,7 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            '${student.grade} • ${submission.submittedAtLabel}',
+                                            '${student.grade} • ${student.section} • ${submission.submittedAtLabel}',
                                             style: GoogleFonts.inter(
                                               fontSize: 10,
                                               color: Colors.white70,
@@ -419,64 +419,10 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  (student.status.toUpperCase() == 'OUTSTANDING'
-                                          ? const Color(0xFF4ADE80)
-                                          : const Color(0xFFFBBF24))
-                                      .withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color:
-                                    (student.status.toUpperCase() ==
-                                                'OUTSTANDING'
-                                            ? const Color(0xFF4ADE80)
-                                            : const Color(0xFFFBBF24))
-                                        .withValues(alpha: 0.4),
-                              ),
-                            ),
-                            child: Text(
-                              student.status,
-                              style: GoogleFonts.outfit(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    student.status.toUpperCase() ==
-                                        'OUTSTANDING'
-                                    ? const Color(0xFF4ADE80)
-                                    : const Color(0xFFFBBF24),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Divider(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        thickness: 1,
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Metrics
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildMetricColumn(
-                            'Accuracy',
-                            '${(student.readingAccuracy * 100).toInt()}%',
-                          ),
-                          _buildMetricColumn(
-                            'Vocabulary',
-                            '${(student.vocabularyLevel * 100).toInt()}%',
-                          ),
-                          _buildMetricColumn(
-                            'Progress',
-                            '${student.progressCurrent}/${student.progressTotal}',
+                          const Icon(
+                            Icons.chevron_right,
+                            color: Colors.white70,
+                            size: 18,
                           ),
                         ],
                       ),
@@ -485,31 +431,6 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                 ),
               );
             },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMetricColumn(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 11,
-            color: Colors.white70,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
           ),
         ),
       ],

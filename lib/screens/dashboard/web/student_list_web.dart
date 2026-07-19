@@ -154,7 +154,7 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            '${student.grade} • ${submission.submittedAtLabel} • Quiz ${submission.quizScore}/${submission.quizTotal}',
+                                            '${student.grade} • ${student.section} • ${submission.submittedAtLabel}',
                                             style: GoogleFonts.outfit(
                                               fontSize: 12,
                                               color: Colors.white70,
@@ -183,32 +183,6 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildMetricLabel(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            color: Colors.white60,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: GoogleFonts.outfit(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
     );
   }
 
@@ -477,63 +451,9 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                           ),
                         ),
 
-                        // Metrics & Status on the right
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildMetricLabel(
-                              'Accuracy',
-                              '${(student.readingAccuracy * 100).toInt()}%',
-                            ),
-                            const SizedBox(width: 24),
-                            _buildMetricLabel(
-                              'Vocabulary',
-                              '${(student.vocabularyLevel * 100).toInt()}%',
-                            ),
-                            const SizedBox(width: 24),
-                            _buildMetricLabel(
-                              'Progress',
-                              '${student.progressCurrent}/${student.progressTotal}',
-                            ),
-                            const SizedBox(width: 28),
-
-                            // Compact status badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    (student.status.toUpperCase() ==
-                                                'OUTSTANDING'
-                                            ? const Color(0xFF4ADE80)
-                                            : const Color(0xFFFBBF24))
-                                        .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color:
-                                      (student.status.toUpperCase() ==
-                                                  'OUTSTANDING'
-                                              ? const Color(0xFF4ADE80)
-                                              : const Color(0xFFFBBF24))
-                                          .withValues(alpha: 0.4),
-                                ),
-                              ),
-                              child: Text(
-                                student.status,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      student.status.toUpperCase() ==
-                                          'OUTSTANDING'
-                                      ? const Color(0xFF4ADE80)
-                                      : const Color(0xFFFBBF24),
-                                ),
-                              ),
-                            ),
-                          ],
+                        const Icon(
+                          Icons.chevron_right_outlined,
+                          color: Colors.white70,
                         ),
                       ],
                     ),
