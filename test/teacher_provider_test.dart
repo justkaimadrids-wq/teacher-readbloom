@@ -32,12 +32,12 @@ void main() {
     expect(provider.books.last.questions, hasLength(2));
   });
 
-  test('addBadgeToStudent does not duplicate badges', () {
+  test('addBadgeToStudent does not duplicate badges', () async {
     final provider = TeacherProvider();
     final student = provider.students.first;
     final initialBadgeCount = student.badges.length;
 
-    provider.addBadgeToStudent(student.id, student.badges.first);
+    await provider.addBadgeToStudent(student.id, student.badges.first);
 
     expect(provider.students.first.badges.length, initialBadgeCount);
   });

@@ -113,30 +113,71 @@ class TeacherProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addBadgeToStudent(String studentId, String badge) {
+  Future<String?> addBadgeToStudent(String studentId, String badge) async {
     final index = _students.indexWhere((s) => s.id == studentId);
-    if (index == -1 || badge.trim().isEmpty) return;
+    final cleanedBadge = badge.trim();
+    if (index == -1 || cleanedBadge.isEmpty) return null;
 
     final currentStudent = _students[index];
-    if (currentStudent.badges.contains(badge)) return;
+    if (currentStudent.badges.contains(cleanedBadge)) return null;
 
-    final updatedBadges = List<String>.from(currentStudent.badges)..add(badge);
+    try {
+      await _teacherRepository.awardBadgeToStudent(
+        studentId: studentId,
+        badgeName: cleanedBadge,
+      );
+    } catch (_) {
+      return 'Unable to award badge right now.';
+    }
+
+    final updatedBadges = List<String>.from(currentStudent.badges)
+      ..add(cleanedBadge);
     _students = List<StudentProgress>.from(_students)
-      ..[index] = StudentProgress(
-        id: currentStudent.id,
-        name: currentStudent.name,
-        readingAccuracy: currentStudent.readingAccuracy,
-        vocabularyLevel: currentStudent.vocabularyLevel,
-        progressCurrent: currentStudent.progressCurrent,
-        progressTotal: currentStudent.progressTotal,
-        status: currentStudent.status,
-        badges: updatedBadges,
-        grade: currentStudent.grade,
-        section: currentStudent.section,
-        avatarUrl: currentStudent.avatarUrl,
-        skillLevel: currentStudent.skillLevel,
+      ..[index] = _copyStudent(currentStudent, badges: updatedBadges);
+    notifyListeners();
+    return null;
+  }
+
+  Future<String?> updateStudentSkillLevels({
+    required String studentId,
+    required int readingLevel,
+    required int vocabularyLevel,
+    required int wordMasterLevel,
+    required int comprehensionLevel,
+  }) async {
+    final index = _students.indexWhere((student) => student.id == studentId);
+    if (index == -1) return null;
+
+    final safeReadingLevel = readingLevel < 1 ? 1 : readingLevel;
+    final safeVocabularyLevel = vocabularyLevel < 1 ? 1 : vocabularyLevel;
+    final safeWordMasterLevel = wordMasterLevel < 1 ? 1 : wordMasterLevel;
+    final safeComprehensionLevel = comprehensionLevel < 1
+        ? 1
+        : comprehensionLevel;
+
+    try {
+      await _teacherRepository.updateStudentSkillLevels(
+        studentId: studentId,
+        readingLevel: safeReadingLevel,
+        vocabularyLevel: safeVocabularyLevel,
+        wordMasterLevel: safeWordMasterLevel,
+        comprehensionLevel: safeComprehensionLevel,
+      );
+    } catch (_) {
+      return 'Unable to update skill levels right now.';
+    }
+
+    final student = _students[index];
+    _students = List<StudentProgress>.from(_students)
+      ..[index] = _copyStudent(
+        student,
+        readingLevel: safeReadingLevel,
+        vocabularySkillLevel: safeVocabularyLevel,
+        wordMasterLevel: safeWordMasterLevel,
+        comprehensionLevel: safeComprehensionLevel,
       );
     notifyListeners();
+    return null;
   }
 
   Future<String?> sendFeedbackForSubmission({
@@ -181,20 +222,7 @@ class TeacherProvider extends ChangeNotifier {
       );
       _students = _students.map((student) {
         if (student.id != studentId) return student;
-        return StudentProgress(
-          id: student.id,
-          name: student.name,
-          readingAccuracy: student.readingAccuracy,
-          vocabularyLevel: student.vocabularyLevel,
-          progressCurrent: student.progressCurrent,
-          progressTotal: student.progressTotal,
-          status: student.status,
-          badges: student.badges,
-          grade: student.grade,
-          section: student.section,
-          avatarUrl: student.avatarUrl,
-          skillLevel: cleanedSkillLevel,
-        );
+        return _copyStudent(student, skillLevel: cleanedSkillLevel);
       }).toList();
       return null;
     } catch (_) {
@@ -387,5 +415,35 @@ class TeacherProvider extends ChangeNotifier {
       _isTeacherDataLoading = false;
       notifyListeners();
     }
+  }
+
+  StudentProgress _copyStudent(
+    StudentProgress student, {
+    List<String>? badges,
+    String? skillLevel,
+    int? readingLevel,
+    int? vocabularySkillLevel,
+    int? wordMasterLevel,
+    int? comprehensionLevel,
+  }) {
+    return StudentProgress(
+      id: student.id,
+      name: student.name,
+      readingAccuracy: student.readingAccuracy,
+      vocabularyLevel: student.vocabularyLevel,
+      progressCurrent: student.progressCurrent,
+      progressTotal: student.progressTotal,
+      status: student.status,
+      badges: badges ?? student.badges,
+      grade: student.grade,
+      section: student.section,
+      avatarUrl: student.avatarUrl,
+      skillLevel: skillLevel ?? student.skillLevel,
+      readingLevel: readingLevel ?? student.readingLevel,
+      vocabularySkillLevel:
+          vocabularySkillLevel ?? student.vocabularySkillLevel,
+      wordMasterLevel: wordMasterLevel ?? student.wordMasterLevel,
+      comprehensionLevel: comprehensionLevel ?? student.comprehensionLevel,
+    );
   }
 }

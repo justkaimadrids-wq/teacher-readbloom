@@ -25,6 +25,10 @@ class StudentProgress {
   final String section;
   final String avatarUrl;
   final String skillLevel;
+  final int readingLevel;
+  final int vocabularySkillLevel;
+  final int wordMasterLevel;
+  final int comprehensionLevel;
 
   StudentProgress({
     required this.id,
@@ -39,6 +43,10 @@ class StudentProgress {
     required this.section,
     this.avatarUrl = '',
     this.skillLevel = 'Reading Explorer',
+    this.readingLevel = 1,
+    this.vocabularySkillLevel = 1,
+    this.wordMasterLevel = 1,
+    this.comprehensionLevel = 1,
   });
 }
 

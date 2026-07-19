@@ -46,6 +46,17 @@ abstract class TeacherRepository {
     required String studentId,
     required String skillLevel,
   });
+  Future<void> updateStudentSkillLevels({
+    required String studentId,
+    required int readingLevel,
+    required int vocabularyLevel,
+    required int wordMasterLevel,
+    required int comprehensionLevel,
+  });
+  Future<void> awardBadgeToStudent({
+    required String studentId,
+    required String badgeName,
+  });
   Future<Book> addBook({
     required String title,
     required String grade,
@@ -273,6 +284,21 @@ class MockTeacherRepository implements TeacherRepository {
   }) async {}
 
   @override
+  Future<void> updateStudentSkillLevels({
+    required String studentId,
+    required int readingLevel,
+    required int vocabularyLevel,
+    required int wordMasterLevel,
+    required int comprehensionLevel,
+  }) async {}
+
+  @override
+  Future<void> awardBadgeToStudent({
+    required String studentId,
+    required String badgeName,
+  }) async {}
+
+  @override
   Future<Book> addBook({
     required String title,
     required String grade,
@@ -406,7 +432,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
     final rows = await client
         .from('student_profiles')
         .select(
-          'profile_id,grade_level,current_skill_level,profiles(full_name,email,avatar_url,status),sections(name)',
+          'profile_id,grade_level,current_skill_level,reading_level,vocabulary_level,word_master_level,comprehension_level,profiles(full_name,email,avatar_url,status),sections(name)',
         )
         .order('grade_level');
 
@@ -430,6 +456,8 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
           : accuracyValues.reduce((a, b) => a + b) / accuracyValues.length;
       final status = _statusForAccuracy(avgAccuracy, submittedCount);
 
+      final badges = await _getStudentBadges(id);
+
       students.add(
         StudentProgress(
           id: id,
@@ -441,7 +469,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
               ? reviews.length
               : submittedCount,
           status: status,
-          badges: const [],
+          badges: badges,
           grade: row['grade_level'] as String? ?? '',
           section: section['name'] as String? ?? '',
           avatarUrl: await _getSignedAvatarUrl(
@@ -449,6 +477,11 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
           ),
           skillLevel:
               row['current_skill_level'] as String? ?? 'Reading Explorer',
+          readingLevel: (row['reading_level'] as num?)?.toInt() ?? 1,
+          vocabularySkillLevel: (row['vocabulary_level'] as num?)?.toInt() ?? 1,
+          wordMasterLevel: (row['word_master_level'] as num?)?.toInt() ?? 1,
+          comprehensionLevel:
+              (row['comprehension_level'] as num?)?.toInt() ?? 1,
         ),
       );
     }
@@ -630,6 +663,108 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
   }
 
   @override
+  Future<void> updateStudentSkillLevels({
+    required String studentId,
+    required int readingLevel,
+    required int vocabularyLevel,
+    required int wordMasterLevel,
+    required int comprehensionLevel,
+  }) async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      return super.updateStudentSkillLevels(
+        studentId: studentId,
+        readingLevel: readingLevel,
+        vocabularyLevel: vocabularyLevel,
+        wordMasterLevel: wordMasterLevel,
+        comprehensionLevel: comprehensionLevel,
+      );
+    }
+
+    await client
+        .from('student_profiles')
+        .update({
+          'reading_level': readingLevel,
+          'vocabulary_level': vocabularyLevel,
+          'word_master_level': wordMasterLevel,
+          'comprehension_level': comprehensionLevel,
+        })
+        .eq('profile_id', studentId);
+
+    try {
+      await client.from('activity_logs').insert({
+        'actor_id': user.id,
+        'actor_role': 'teacher',
+        'action': 'updated_student_skill_levels',
+        'entity_type': 'student_profile',
+        'entity_id': studentId,
+        'metadata': {
+          'student_id': studentId,
+          'reading_level': readingLevel,
+          'vocabulary_level': vocabularyLevel,
+          'word_master_level': wordMasterLevel,
+          'comprehension_level': comprehensionLevel,
+        },
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> awardBadgeToStudent({
+    required String studentId,
+    required String badgeName,
+  }) async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      return super.awardBadgeToStudent(
+        studentId: studentId,
+        badgeName: badgeName,
+      );
+    }
+
+    final existingBadge = await client
+        .from('badges')
+        .select('id')
+        .eq('name', badgeName)
+        .maybeSingle();
+    final badgeRow =
+        existingBadge ??
+        await client
+            .from('badges')
+            .insert({'name': badgeName, 'created_by': user.id})
+            .select('id')
+            .single();
+    final badgeId = badgeRow['id'] as String;
+
+    final existingAward = await client
+        .from('student_badges')
+        .select('student_id')
+        .eq('student_id', studentId)
+        .eq('badge_id', badgeId)
+        .maybeSingle();
+    if (existingAward == null) {
+      await client.from('student_badges').insert({
+        'student_id': studentId,
+        'badge_id': badgeId,
+        'awarded_by': user.id,
+      });
+    }
+
+    try {
+      await client.from('activity_logs').insert({
+        'actor_id': user.id,
+        'actor_role': 'teacher',
+        'action': 'awarded_badge',
+        'entity_type': 'badge',
+        'entity_id': badgeId,
+        'metadata': {'student_id': studentId, 'badge_name': badgeName},
+      });
+    } catch (_) {}
+  }
+
+  @override
   Future<List<Book>> getCurrentBooks() async {
     final client = SupabaseService.client;
     final user = client?.auth.currentUser;
@@ -646,6 +781,27 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         .order('title');
 
     return rows.map<Book>(_bookFromRow).toList();
+  }
+
+  Future<List<String>> _getStudentBadges(String studentId) async {
+    final client = SupabaseService.client;
+    if (client == null) return const [];
+    try {
+      final rows = await client
+          .from('student_badges')
+          .select('badges(name)')
+          .eq('student_id', studentId)
+          .order('awarded_at', ascending: false);
+      return rows
+          .map<String>((row) {
+            final badge = _embeddedMap(row['badges']);
+            return badge['name'] as String? ?? '';
+          })
+          .where((badge) => badge.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
   @override
