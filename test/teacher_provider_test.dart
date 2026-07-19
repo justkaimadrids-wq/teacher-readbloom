@@ -2,6 +2,40 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:teacher_readbloom/models/teacher_models.dart';
 import 'package:teacher_readbloom/providers/teacher_provider.dart';
 import 'package:teacher_readbloom/repositories/teacher_repository.dart';
+import 'package:teacher_readbloom/services/auth_service.dart';
+
+class ResetPasswordTeacherAuthService implements AuthService {
+  String? updatedPassword;
+  bool signedOut = false;
+
+  @override
+  AppRole get requiredRole => AppRole.teacher;
+
+  @override
+  Future<bool> hasValidSession() async => false;
+
+  @override
+  Future<AuthResult> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return const AuthResult.success();
+  }
+
+  @override
+  Future<void> signOut() async {
+    signedOut = true;
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<AuthResult> updatePassword(String password) async {
+    updatedPassword = password;
+    return const AuthResult.success();
+  }
+}
 
 class BadgeFixtureTeacherRepository extends MockTeacherRepository {
   final List<StudentProgress> _students = [
@@ -66,5 +100,32 @@ void main() {
     await provider.addBadgeToStudent(student.id, student.badges.first);
 
     expect(provider.students.first.badges.length, initialBadgeCount);
+  });
+
+  test('password reset rejects mismatched confirmation', () async {
+    final auth = ResetPasswordTeacherAuthService();
+    final provider = TeacherProvider(authService: auth);
+
+    final result = await provider.completePasswordReset('new-pass', 'wrong');
+
+    expect(result.success, isFalse);
+    expect(result.message, 'Passwords do not match.');
+    expect(auth.updatedPassword, isNull);
+  });
+
+  test('password reset updates password and signs out', () async {
+    final auth = ResetPasswordTeacherAuthService();
+    final provider = TeacherProvider(authService: auth);
+
+    final result = await provider.completePasswordReset(
+      'new-password',
+      'new-password',
+    );
+
+    expect(result.success, isTrue);
+    expect(auth.updatedPassword, 'new-password');
+    expect(auth.signedOut, isTrue);
+    expect(provider.isLoggedIn, isFalse);
+    expect(provider.isPasswordRecovery, isFalse);
   });
 }

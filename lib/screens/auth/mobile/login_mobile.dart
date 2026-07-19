@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/forgot_password_dialog.dart';
 import '../../../widgets/loading_dialog.dart';
 
 class LoginMobileBody extends StatelessWidget {
@@ -143,36 +144,12 @@ class LoginMobileBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () async {
-                    try {
-                      await runWithLoadingDialog(
-                        context,
-                        () => context
-                            .read<TeacherProvider>()
-                            .sendPasswordResetEmail(
-                              emailController.text.trim(),
-                            ),
-                        message: 'Sending reset email...',
-                      );
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Password reset email sent if the account exists.',
-                          ),
-                        ),
-                      );
-                    } catch (_) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Unable to send reset email right now.',
-                          ),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: () => showForgotPasswordDialog(
+                    context,
+                    onSubmit: (email) => context
+                        .read<TeacherProvider>()
+                        .sendPasswordResetEmail(email),
+                  ),
                   child: const Text('Forgot password?'),
                 ),
               ],

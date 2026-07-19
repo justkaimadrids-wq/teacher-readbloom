@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/teacher_models.dart';
 import '../repositories/teacher_repository.dart';
 import '../services/auth_service.dart';
+import '../services/supabase_service.dart';
 
 class TeacherProvider extends ChangeNotifier {
   final TeacherRepository _teacherRepository;
@@ -18,6 +22,7 @@ class TeacherProvider extends ChangeNotifier {
 
   bool _isLoggedIn = false;
   bool _isAuthLoading = true;
+  bool _isPasswordRecovery = false;
   bool _isUploadingAvatar = false;
   bool _isBooksLoading = false;
   bool _isTeacherDataLoading = false;
@@ -26,6 +31,7 @@ class TeacherProvider extends ChangeNotifier {
   String? _booksError;
   String? _teacherDataError;
   StudentProgress? _selectedStudentForEvaluation;
+  StreamSubscription<AuthState>? _authStateSubscription;
 
   TeacherProvider({
     TeacherRepository? teacherRepository,
@@ -39,11 +45,14 @@ class TeacherProvider extends ChangeNotifier {
     _evaluations = _teacherRepository.getEvaluations();
     _books = List<Book>.from(_teacherRepository.getBooks());
     _readingReviewsByStudent = const {};
+    _isPasswordRecovery = _isPasswordRecoveryRedirect();
+    _listenForPasswordRecovery();
     restoreSession();
   }
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isAuthLoading => _isAuthLoading;
+  bool get isPasswordRecovery => _isPasswordRecovery;
   String get teacherName => _account.name;
   String get school => _account.school;
   String get email => _account.email;
@@ -309,6 +318,12 @@ class TeacherProvider extends ChangeNotifier {
   Future<void> restoreSession() async {
     _isAuthLoading = true;
     notifyListeners();
+    if (_isPasswordRecovery) {
+      _isLoggedIn = false;
+      _isAuthLoading = false;
+      notifyListeners();
+      return;
+    }
     _isLoggedIn = await _authService.hasValidSession();
     if (_isLoggedIn) {
       try {
@@ -345,6 +360,7 @@ class TeacherProvider extends ChangeNotifier {
   Future<void> logout() async {
     await _authService.signOut();
     _isLoggedIn = false;
+    _isPasswordRecovery = false;
     _selectedStudentForEvaluation = null;
     notifyListeners();
   }
@@ -355,6 +371,23 @@ class TeacherProvider extends ChangeNotifier {
 
   Future<AuthResult> updatePassword(String password) {
     return _authService.updatePassword(password);
+  }
+
+  Future<AuthResult> completePasswordReset(
+    String password,
+    String confirmPassword,
+  ) async {
+    if (password != confirmPassword) {
+      return const AuthResult.failure('Passwords do not match.');
+    }
+    final result = await _authService.updatePassword(password);
+    if (result.success) {
+      _isPasswordRecovery = false;
+      _isLoggedIn = false;
+      await _authService.signOut();
+      notifyListeners();
+    }
+    return result;
   }
 
   Future<String?> updateProfilePicture() async {
@@ -445,5 +478,31 @@ class TeacherProvider extends ChangeNotifier {
       wordMasterLevel: wordMasterLevel ?? student.wordMasterLevel,
       comprehensionLevel: comprehensionLevel ?? student.comprehensionLevel,
     );
+  }
+
+  void _listenForPasswordRecovery() {
+    final client = SupabaseService.client;
+    if (client == null) return;
+    _authStateSubscription = client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        _isPasswordRecovery = true;
+        _isLoggedIn = false;
+        _isAuthLoading = false;
+        notifyListeners();
+      }
+    });
+  }
+
+  bool _isPasswordRecoveryRedirect() {
+    final uri = Uri.base;
+    return uri.queryParameters['type'] == 'recovery' ||
+        uri.fragment.contains('type=recovery') ||
+        uri.toString().contains('type=recovery');
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    super.dispose();
   }
 }
