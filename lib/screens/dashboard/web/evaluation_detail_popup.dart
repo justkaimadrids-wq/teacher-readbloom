@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../models/teacher_models.dart';
 import '../../../providers/teacher_provider.dart';
+import '../../../widgets/loading_dialog.dart';
 import '../widgets/video_review_dialog.dart';
 
 enum _RemarkType {
@@ -542,13 +543,15 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     }
 
     setState(() => _isSending = true);
-    final error = await context
-        .read<TeacherProvider>()
-        .sendFeedbackForSubmission(
-          submission: selectedSubmission,
-          studentId: widget.student.id,
-          feedback: _composeFeedback(),
-        );
+    final error = await runWithLoadingDialog(
+      context,
+      () => context.read<TeacherProvider>().sendFeedbackForSubmission(
+        submission: selectedSubmission,
+        studentId: widget.student.id,
+        feedback: _composeFeedback(),
+      ),
+      message: 'Sending feedback...',
+    );
     if (!mounted) return;
     setState(() => _isSending = false);
 

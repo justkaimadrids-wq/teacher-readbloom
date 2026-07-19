@@ -1,6 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:teacher_readbloom/models/teacher_models.dart';
 import 'package:teacher_readbloom/providers/teacher_provider.dart';
+import 'package:teacher_readbloom/repositories/teacher_repository.dart';
+
+class BadgeFixtureTeacherRepository extends MockTeacherRepository {
+  final List<StudentProgress> _students = [
+    StudentProgress(
+      id: 'student-1',
+      name: 'Student One',
+      readingAccuracy: 0,
+      vocabularyLevel: 0,
+      progressCurrent: 0,
+      progressTotal: 0,
+      status: '',
+      badges: const ['Existing Badge'],
+      grade: 'Grade 4',
+      section: 'Section A',
+    ),
+  ];
+
+  @override
+  List<StudentProgress> getStudents() => List.unmodifiable(_students);
+
+  @override
+  Future<List<StudentProgress>> getCurrentStudents() async => getStudents();
+}
 
 void main() {
   test('addBook appends a valid book through repository boundary', () async {
@@ -33,7 +57,9 @@ void main() {
   });
 
   test('addBadgeToStudent does not duplicate badges', () async {
-    final provider = TeacherProvider();
+    final provider = TeacherProvider(
+      teacherRepository: BadgeFixtureTeacherRepository(),
+    );
     final student = provider.students.first;
     final initialBadgeCount = student.badges.length;
 

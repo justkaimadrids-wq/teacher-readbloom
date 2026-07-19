@@ -18,7 +18,7 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<TeacherProvider>();
-    final mockActivities = prov.activities.map((activity) {
+    final activityRows = prov.activities.map((activity) {
       final student = prov.students.cast<dynamic>().firstWhere(
         (student) => student.name == activity.studentName,
         orElse: () => null,
@@ -34,7 +34,7 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
     }).toList();
 
     // Compute paginated items
-    final totalItems = mockActivities.length;
+    final totalItems = activityRows.length;
     final totalPages = totalItems == 0
         ? 1
         : (totalItems / _itemsPerPage).ceil();
@@ -45,7 +45,7 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
         : totalItems;
     final paginatedItems = totalItems == 0
         ? <Map<String, String>>[]
-        : mockActivities.sublist(startIndex, endIndex);
+        : activityRows.sublist(startIndex, endIndex);
 
     return SafeArea(
       child: Column(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class LoginWebBody extends StatelessWidget {
   final TextEditingController emailController;
@@ -95,9 +96,13 @@ class LoginWebBody extends StatelessWidget {
                 // Log In Button (Yellow Plain Capsule)
                 InkWell(
                   onTap: () async {
-                    final result = await context.read<TeacherProvider>().login(
-                      emailController.text.trim(),
-                      passwordController.text.trim(),
+                    final result = await runWithLoadingDialog(
+                      context,
+                      () => context.read<TeacherProvider>().login(
+                        emailController.text.trim(),
+                        passwordController.text.trim(),
+                      ),
+                      message: 'Signing in...',
                     );
                     if (result.success || !context.mounted) return;
                     showDialog(
@@ -146,9 +151,15 @@ class LoginWebBody extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     try {
-                      await context
-                          .read<TeacherProvider>()
-                          .sendPasswordResetEmail(emailController.text.trim());
+                      await runWithLoadingDialog(
+                        context,
+                        () => context
+                            .read<TeacherProvider>()
+                            .sendPasswordResetEmail(
+                              emailController.text.trim(),
+                            ),
+                        message: 'Sending reset email...',
+                      );
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class ProfileMobileBody extends StatelessWidget {
   const ProfileMobileBody({super.key});
@@ -157,9 +158,13 @@ class ProfileMobileBody extends StatelessWidget {
                   ? null
                   : () async {
                       final messenger = ScaffoldMessenger.of(context);
-                      final error = await context
-                          .read<TeacherProvider>()
-                          .updateProfilePicture();
+                      final error = await runWithLoadingDialog(
+                        context,
+                        () => context
+                            .read<TeacherProvider>()
+                            .updateProfilePicture(),
+                        message: 'Updating profile picture...',
+                      );
                       if (error != null) {
                         messenger.showSnackBar(SnackBar(content: Text(error)));
                       }

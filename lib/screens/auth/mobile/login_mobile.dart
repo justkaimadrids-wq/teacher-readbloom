@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class LoginMobileBody extends StatelessWidget {
   final TextEditingController emailController;
@@ -110,12 +111,14 @@ class LoginMobileBody extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final result = await context
-                          .read<TeacherProvider>()
-                          .login(
-                            emailController.text.trim(),
-                            passwordController.text.trim(),
-                          );
+                      final result = await runWithLoadingDialog(
+                        context,
+                        () => context.read<TeacherProvider>().login(
+                          emailController.text.trim(),
+                          passwordController.text.trim(),
+                        ),
+                        message: 'Signing in...',
+                      );
                       if (result.success || !context.mounted) return;
                       showDialog(
                         context: context,
@@ -142,9 +145,15 @@ class LoginMobileBody extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     try {
-                      await context
-                          .read<TeacherProvider>()
-                          .sendPasswordResetEmail(emailController.text.trim());
+                      await runWithLoadingDialog(
+                        context,
+                        () => context
+                            .read<TeacherProvider>()
+                            .sendPasswordResetEmail(
+                              emailController.text.trim(),
+                            ),
+                        message: 'Sending reset email...',
+                      );
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

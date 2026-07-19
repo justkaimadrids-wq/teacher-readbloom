@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class BadgesMobileBody extends StatefulWidget {
   const BadgesMobileBody({super.key});
@@ -274,9 +275,16 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                       final messenger = ScaffoldMessenger.of(
                                         context,
                                       );
-                                      final error = await context
-                                          .read<TeacherProvider>()
-                                          .addBadgeToStudent(student.id, text);
+                                      final error = await runWithLoadingDialog(
+                                        context,
+                                        () => context
+                                            .read<TeacherProvider>()
+                                            .addBadgeToStudent(
+                                              student.id,
+                                              text,
+                                            ),
+                                        message: 'Adding badge...',
+                                      );
                                       if (error != null) {
                                         messenger.showSnackBar(
                                           SnackBar(
@@ -469,7 +477,11 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
     Future<String?> Function(int nextLevel) onChanged,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
-    final error = await onChanged(nextLevel);
+    final error = await runWithLoadingDialog(
+      context,
+      () => onChanged(nextLevel),
+      message: 'Updating skill level...',
+    );
     if (error != null) {
       messenger.showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class BooksMobileBody extends StatefulWidget {
   const BooksMobileBody({super.key});
@@ -330,20 +331,31 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                                             final navigator = Navigator.of(
                                               context,
                                             );
-                                            final error = await context
-                                                .read<TeacherProvider>()
-                                                .addBook(
-                                                  title: _titleController.text,
-                                                  grade: _selectedGrade,
-                                                  section: _selectedSection,
-                                                  content:
-                                                      _contentController.text,
-                                                  questions: _questionDrafts
-                                                      .map(
-                                                        (draft) =>
-                                                            draft.toInput(),
-                                                      )
-                                                      .toList(),
+                                            final error =
+                                                await runWithLoadingDialog(
+                                                  context,
+                                                  () => context
+                                                      .read<TeacherProvider>()
+                                                      .addBook(
+                                                        title: _titleController
+                                                            .text,
+                                                        grade: _selectedGrade,
+                                                        section:
+                                                            _selectedSection,
+                                                        content:
+                                                            _contentController
+                                                                .text,
+                                                        questions:
+                                                            _questionDrafts
+                                                                .map(
+                                                                  (
+                                                                    draft,
+                                                                  ) => draft
+                                                                      .toInput(),
+                                                                )
+                                                                .toList(),
+                                                      ),
+                                                  message: 'Saving book...',
                                                 );
                                             if (error != null) {
                                               messenger.showSnackBar(
