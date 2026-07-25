@@ -7,9 +7,7 @@ void main() {
   testWidgets('Teacher App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(
       MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => TeacherProvider()),
-        ],
+        providers: [ChangeNotifierProvider(create: (_) => TeacherProvider())],
         child: const TeacherApp(),
       ),
     );

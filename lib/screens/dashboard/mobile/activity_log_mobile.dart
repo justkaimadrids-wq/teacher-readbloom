@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/teacher_provider.dart';
 
 class ActivityLogMobileBody extends StatefulWidget {
   const ActivityLogMobileBody({super.key});
@@ -14,97 +17,35 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
 
   @override
   Widget build(BuildContext context) {
-
-    // Mock activities to show pagination clearly
-    final List<Map<String, String>> mockActivities = [
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Brave Little Squirrel',
-        'date': '2026-03-10',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Space Exploration',
-        'date': '2026-02-09',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Asta Orfai',
-        'grade': 'Grade 6',
-        'section': 'Section A',
-        'bookRead': 'Nature Words',
-        'date': '2026-03-01',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Kei Adamson',
-        'grade': 'Grade 4',
-        'section': 'Section B',
-        'bookRead': 'Action Verbs',
-        'date': '2026-02-01',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Whispering Trees',
-        'date': '2026-01-20',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Tales of the Ocean',
-        'date': '2026-01-15',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Asta Orfai',
-        'grade': 'Grade 6',
-        'section': 'Section A',
-        'bookRead': 'Volcano Wonders',
-        'date': '2025-12-18',
-        'status': 'In Progress'
-      },
-      {
-        'studentName': 'Kei Adamson',
-        'grade': 'Grade 4',
-        'section': 'Section B',
-        'bookRead': 'Amazing Animals',
-        'date': '2025-12-10',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Wind in the Willows',
-        'date': '2025-12-01',
-        'status': 'In Progress'
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Stars and Galaxies',
-        'date': '2025-11-20',
-        'status': 'Finished'
-      },
-    ];
+    final prov = context.watch<TeacherProvider>();
+    final activityRows = prov.activities.map((activity) {
+      final student = prov.students.cast<dynamic>().firstWhere(
+        (student) => student.name == activity.studentName,
+        orElse: () => null,
+      );
+      return {
+        'studentName': activity.studentName,
+        'grade': student?.grade?.toString() ?? '',
+        'section': student?.section?.toString() ?? '',
+        'bookRead': activity.activityTitle.replaceFirst('Read: ', ''),
+        'date': activity.date,
+        'status': activity.score >= 1 ? 'Finished' : 'Processing',
+      };
+    }).toList();
 
     // Compute paginated items
-    final totalItems = mockActivities.length;
-    final totalPages = (totalItems / _itemsPerPage).ceil();
+    final totalItems = activityRows.length;
+    final totalPages = totalItems == 0
+        ? 1
+        : (totalItems / _itemsPerPage).ceil();
+    if (_currentPage > totalPages) _currentPage = totalPages;
     final startIndex = (_currentPage - 1) * _itemsPerPage;
-    final endIndex = (startIndex + _itemsPerPage < totalItems) ? startIndex + _itemsPerPage : totalItems;
-    final paginatedItems = mockActivities.sublist(startIndex, endIndex);
+    final endIndex = (startIndex + _itemsPerPage < totalItems)
+        ? startIndex + _itemsPerPage
+        : totalItems;
+    final paginatedItems = totalItems == 0
+        ? <Map<String, String>>[]
+        : activityRows.sublist(startIndex, endIndex);
 
     return SafeArea(
       child: Column(
@@ -126,7 +67,11 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
           // Log Container Panel
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 32.0),
+              padding: const EdgeInsets.only(
+                left: 20.0,
+                right: 20.0,
+                bottom: 32.0,
+              ),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -162,7 +107,10 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Divider(color: Colors.white.withValues(alpha: 0.15), thickness: 1),
+                    Divider(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      thickness: 1,
+                    ),
                     const SizedBox(height: 12),
 
                     // Log list items paged
@@ -170,10 +118,16 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: paginatedItems.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, idx) {
                         final act = paginatedItems[idx];
-                        final initials = act['studentName']!.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+                        final initials = act['studentName']!
+                            .split(' ')
+                            .map((e) => e.isNotEmpty ? e[0] : '')
+                            .take(2)
+                            .join()
+                            .toUpperCase();
 
                         return Container(
                           padding: const EdgeInsets.all(12),
@@ -214,18 +168,23 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: (act['status'] == 'Finished'
-                                              ? const Color(0xFF4ADE80)
-                                              : const Color(0xFFFBBF24))
-                                          .withValues(alpha: 0.2),
+                                      color:
+                                          (act['status'] == 'Finished'
+                                                  ? const Color(0xFF4ADE80)
+                                                  : const Color(0xFFFBBF24))
+                                              .withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
-                                        color: (act['status'] == 'Finished'
-                                                ? const Color(0xFF4ADE80)
-                                                : const Color(0xFFFBBF24))
-                                            .withValues(alpha: 0.4),
+                                        color:
+                                            (act['status'] == 'Finished'
+                                                    ? const Color(0xFF4ADE80)
+                                                    : const Color(0xFFFBBF24))
+                                                .withValues(alpha: 0.4),
                                       ),
                                     ),
                                     child: Text(
@@ -242,13 +201,23 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              Divider(color: Colors.white.withValues(alpha: 0.06), height: 1),
+                              Divider(
+                                color: Colors.white.withValues(alpha: 0.06),
+                                height: 1,
+                              ),
                               const SizedBox(height: 8),
 
                               // Grade / Section / Book info
-                              _buildLogDetailRow('Class', '${act['grade']} • ${act['section']}'),
+                              _buildLogDetailRow(
+                                'Class',
+                                '${act['grade']} • ${act['section']}',
+                              ),
                               const SizedBox(height: 4),
-                              _buildLogDetailRow('Book', act['bookRead']!, isHighlight: true),
+                              _buildLogDetailRow(
+                                'Book',
+                                act['bookRead']!,
+                                isHighlight: true,
+                              ),
                               const SizedBox(height: 4),
                               _buildLogDetailRow('Date', act['date']!),
                             ],
@@ -267,12 +236,19 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                               ? () => setState(() => _currentPage--)
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.1),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.1,
+                            ),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.white.withValues(alpha: 0.02),
+                            disabledBackgroundColor: Colors.white.withValues(
+                              alpha: 0.02,
+                            ),
                             disabledForegroundColor: Colors.white24,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: BorderSide(
@@ -284,7 +260,10 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                           ),
                           child: Text(
                             'Prev',
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                         Text(
@@ -300,12 +279,19 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                               ? () => setState(() => _currentPage++)
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.1),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.1,
+                            ),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.white.withValues(alpha: 0.02),
+                            disabledBackgroundColor: Colors.white.withValues(
+                              alpha: 0.02,
+                            ),
                             disabledForegroundColor: Colors.white24,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                               side: BorderSide(
@@ -317,7 +303,10 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
                           ),
                           child: Text(
                             'Next',
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -332,7 +321,11 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
     );
   }
 
-  Widget _buildLogDetailRow(String label, String value, {bool isHighlight = false}) {
+  Widget _buildLogDetailRow(
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

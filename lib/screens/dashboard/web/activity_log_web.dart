@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/teacher_provider.dart';
 
 class ActivityLogWebBody extends StatefulWidget {
   const ActivityLogWebBody({super.key});
@@ -15,97 +18,35 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
 
   @override
   Widget build(BuildContext context) {
-
-    // Let's create an expanded list of activities to demonstrate pagination nicely
-    final List<Map<String, String>> mockActivities = [
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Brave Little Squirrel',
-        'date': '2026-03-10',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Space Exploration',
-        'date': '2026-02-09',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Asta Orfai',
-        'grade': 'Grade 6',
-        'section': 'Section A',
-        'bookRead': 'Nature Words',
-        'date': '2026-03-01',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Kei Adamson',
-        'grade': 'Grade 4',
-        'section': 'Section B',
-        'bookRead': 'Action Verbs',
-        'date': '2026-02-01',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Whispering Trees',
-        'date': '2026-01-20',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Tales of the Ocean',
-        'date': '2026-01-15',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Asta Orfai',
-        'grade': 'Grade 6',
-        'section': 'Section A',
-        'bookRead': 'Volcano Wonders',
-        'date': '2025-12-18',
-        'status': 'In Progress'
-      },
-      {
-        'studentName': 'Kei Adamson',
-        'grade': 'Grade 4',
-        'section': 'Section B',
-        'bookRead': 'Amazing Animals',
-        'date': '2025-12-10',
-        'status': 'Finished'
-      },
-      {
-        'studentName': 'Kira Jhonson',
-        'grade': 'Grade 4',
-        'section': 'Section A',
-        'bookRead': 'The Wind in the Willows',
-        'date': '2025-12-01',
-        'status': 'In Progress'
-      },
-      {
-        'studentName': 'Akame Tori',
-        'grade': 'Grade 5',
-        'section': 'Section B',
-        'bookRead': 'Stars and Galaxies',
-        'date': '2025-11-20',
-        'status': 'Finished'
-      },
-    ];
+    final prov = context.watch<TeacherProvider>();
+    final activityRows = prov.activities.map((activity) {
+      final student = prov.students.cast<dynamic>().firstWhere(
+        (student) => student.name == activity.studentName,
+        orElse: () => null,
+      );
+      return {
+        'studentName': activity.studentName,
+        'grade': student?.grade?.toString() ?? '',
+        'section': student?.section?.toString() ?? '',
+        'bookRead': activity.activityTitle.replaceFirst('Read: ', ''),
+        'date': activity.date,
+        'status': activity.score >= 1 ? 'Finished' : 'Processing',
+      };
+    }).toList();
 
     // Compute paginated items
-    final totalItems = mockActivities.length;
-    final totalPages = (totalItems / _itemsPerPage).ceil();
+    final totalItems = activityRows.length;
+    final totalPages = totalItems == 0
+        ? 1
+        : (totalItems / _itemsPerPage).ceil();
+    if (_currentPage > totalPages) _currentPage = totalPages;
     final startIndex = (_currentPage - 1) * _itemsPerPage;
-    final endIndex = (startIndex + _itemsPerPage < totalItems) ? startIndex + _itemsPerPage : totalItems;
-    final paginatedItems = mockActivities.sublist(startIndex, endIndex);
+    final endIndex = (startIndex + _itemsPerPage < totalItems)
+        ? startIndex + _itemsPerPage
+        : totalItems;
+    final paginatedItems = totalItems == 0
+        ? <Map<String, String>>[]
+        : activityRows.sublist(startIndex, endIndex);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,10 +63,7 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 border: const Border(
-                  bottom: BorderSide(
-                    color: Colors.white24,
-                    width: 1.5,
-                  ),
+                  bottom: BorderSide(color: Colors.white24, width: 1.5),
                 ),
               ),
               child: Text(
@@ -186,20 +124,45 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
                       children: [
                         // Table Header Row
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Expanded(flex: 3, child: _buildTableHeaderCell('Student Name')),
-                              Expanded(flex: 2, child: _buildTableHeaderCell('Grade')),
-                              Expanded(flex: 2, child: _buildTableHeaderCell('Section')),
-                              Expanded(flex: 4, child: _buildTableHeaderCell('Book Read')),
-                              Expanded(flex: 2, child: _buildTableHeaderCell('Date Finished')),
-                              Expanded(flex: 2, child: _buildTableHeaderCell('Status')),
+                              Expanded(
+                                flex: 3,
+                                child: _buildTableHeaderCell('Student Name'),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: _buildTableHeaderCell('Grade'),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: _buildTableHeaderCell('Section'),
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: _buildTableHeaderCell('Book Read'),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: _buildTableHeaderCell('Date Finished'),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: _buildTableHeaderCell('Status'),
+                              ),
                             ],
                           ),
                         ),
@@ -215,18 +178,29 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
                             final isEven = idx % 2 == 0;
 
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                               decoration: BoxDecoration(
                                 color: isEven
                                     ? Colors.white.withValues(alpha: 0.04)
                                     : Colors.transparent,
                                 borderRadius: isLast
-                                    ? const BorderRadius.vertical(bottom: Radius.circular(16))
+                                    ? const BorderRadius.vertical(
+                                        bottom: Radius.circular(16),
+                                      )
                                     : null,
                                 border: Border(
-                                  left: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                                  right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                                  bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                  left: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
+                                  right: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
+                                  bottom: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
                                 ),
                               ),
                               child: Row(
@@ -294,18 +268,29 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
                                     child: Align(
                                       alignment: Alignment.centerLeft,
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: (act['status'] == 'Finished'
-                                                  ? const Color(0xFF4ADE80)
-                                                  : const Color(0xFFFBBF24))
-                                              .withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(8),
+                                          color:
+                                              (act['status'] == 'Finished'
+                                                      ? const Color(0xFF4ADE80)
+                                                      : const Color(0xFFFBBF24))
+                                                  .withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           border: Border.all(
-                                            color: (act['status'] == 'Finished'
-                                                    ? const Color(0xFF4ADE80)
-                                                    : const Color(0xFFFBBF24))
-                                                .withValues(alpha: 0.4),
+                                            color:
+                                                (act['status'] == 'Finished'
+                                                        ? const Color(
+                                                            0xFF4ADE80,
+                                                          )
+                                                        : const Color(
+                                                            0xFFFBBF24,
+                                                          ))
+                                                    .withValues(alpha: 0.4),
                                           ),
                                         ),
                                         child: Text(
@@ -342,15 +327,24 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
                           icon: const Icon(Icons.chevron_left, size: 18),
                           label: Text(
                             'Previous',
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.15),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.15,
+                            ),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
+                            disabledBackgroundColor: Colors.white.withValues(
+                              alpha: 0.05,
+                            ),
                             disabledForegroundColor: Colors.white30,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
@@ -380,15 +374,24 @@ class _ActivityLogWebBodyState extends State<ActivityLogWebBody> {
                           icon: const Icon(Icons.chevron_right, size: 18),
                           label: Text(
                             'Next',
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.15),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.15,
+                            ),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
+                            disabledBackgroundColor: Colors.white.withValues(
+                              alpha: 0.05,
+                            ),
                             disabledForegroundColor: Colors.white30,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(

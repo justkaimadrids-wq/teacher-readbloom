@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
+import '../../../widgets/forgot_password_dialog.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class LoginWebBody extends StatelessWidget {
   final TextEditingController emailController;
@@ -94,10 +96,31 @@ class LoginWebBody extends StatelessWidget {
 
                 // Log In Button (Yellow Plain Capsule)
                 InkWell(
-                  onTap: () {
-                    context.read<TeacherProvider>().login(
-                      emailController.text.trim(),
-                      passwordController.text.trim(),
+                  onTap: () async {
+                    final result = await runWithLoadingDialog(
+                      context,
+                      () => context.read<TeacherProvider>().login(
+                        emailController.text.trim(),
+                        passwordController.text.trim(),
+                      ),
+                      message: 'Signing in...',
+                    );
+                    if (result.success || !context.mounted) return;
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Cannot login'),
+                        content: Text(
+                          result.message ??
+                              'Credentials not found or incorrect.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      ),
                     );
                   },
                   child: Container(
@@ -126,6 +149,18 @@ class LoginWebBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => showForgotPasswordDialog(
+                    context,
+                    onSubmit: (email) => context
+                        .read<TeacherProvider>()
+                        .sendPasswordResetEmail(email),
+                  ),
+                  child: Text(
+                    'Forgot password?',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
           ),
@@ -176,7 +211,10 @@ class LoginWebBody extends StatelessWidget {
           color: Colors.black38,
           fontWeight: FontWeight.w500,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide.none,

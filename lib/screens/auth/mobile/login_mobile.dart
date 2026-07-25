@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/forgot_password_dialog.dart';
+import '../../../widgets/loading_dialog.dart';
 
 class LoginMobileBody extends StatelessWidget {
   final TextEditingController emailController;
@@ -109,10 +111,31 @@ class LoginMobileBody extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<TeacherProvider>().login(
-                        emailController.text.trim(),
-                        passwordController.text.trim(),
+                    onPressed: () async {
+                      final result = await runWithLoadingDialog(
+                        context,
+                        () => context.read<TeacherProvider>().login(
+                          emailController.text.trim(),
+                          passwordController.text.trim(),
+                        ),
+                        message: 'Signing in...',
+                      );
+                      if (result.success || !context.mounted) return;
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Cannot login'),
+                          content: Text(
+                            result.message ??
+                                'Credentials not found or incorrect.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
                       );
                     },
                     icon: const Icon(Icons.login),
@@ -120,6 +143,15 @@ class LoginMobileBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => showForgotPasswordDialog(
+                    context,
+                    onSubmit: (email) => context
+                        .read<TeacherProvider>()
+                        .sendPasswordResetEmail(email),
+                  ),
+                  child: const Text('Forgot password?'),
+                ),
               ],
             ),
           ),
