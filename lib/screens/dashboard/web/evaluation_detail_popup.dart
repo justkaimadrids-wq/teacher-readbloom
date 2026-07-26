@@ -44,6 +44,9 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
   final Map<_RemarkType, Set<int>> _remarkIndexes = {
     for (final type in _RemarkType.values) type: <int>{},
   };
+  final Map<_RemarkType, int> _remarkCounts = {
+    for (final type in _RemarkType.values) type: 0,
+  };
   final TextEditingController _feedbackController = TextEditingController();
   _RemarkType? _activeType;
   bool _isSending = false;
@@ -52,6 +55,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
   void initState() {
     super.initState();
     _feedbackController.text = widget.eval.feedback;
+    _applySuggestedRemarks();
   }
 
   @override
@@ -145,6 +149,10 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
 
   List<Widget> _buildMainColumn(BuildContext context, bool isMobile) {
     return [
+      if (widget.submission?.suggestedRemarks?.hasSuggestions == true) ...[
+        _buildSuggestionLabel(),
+        const SizedBox(height: 10),
+      ],
       _buildRemarkSelector(isMobile),
       const SizedBox(height: 16),
       _buildTextColumns(isMobile),
@@ -295,7 +303,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
       runSpacing: 10,
       children: _RemarkType.values.map((type) {
         final selected = _activeType == type;
-        final count = _remarkIndexes[type]!.length;
+        final count = _remarkCounts[type] ?? _remarkIndexes[type]!.length;
         return InkWell(
           onTap: () {
             setState(() {
@@ -340,6 +348,33 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     );
   }
 
+  Widget _buildSuggestionLabel() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF60A5FA).withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: const Color(0xFF60A5FA).withValues(alpha: 0.35),
+          ),
+        ),
+        child: Text(
+          widget.submission?.suggestedRemarks?.source ==
+                  'deterministic_alignment_with_ai_review'
+              ? 'AI-reviewed suggestions'
+              : 'AI-suggested reading remarks',
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextColumns(bool isMobile) {
     final transcript = _buildTranscriptBox(isMobile);
     final passage = _buildPassageBox(isMobile);
@@ -381,6 +416,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
                             } else {
                               selected.add(entry.key);
                             }
+                            _remarkCounts[_activeType!] = selected.length;
                           });
                         },
                   borderRadius: BorderRadius.circular(8),
@@ -580,7 +616,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
         for (final type in _RemarkType.values)
           type.name: {
             'label': type.label,
-            'count': _remarkIndexes[type]!.length,
+            'count': _remarkCounts[type] ?? _remarkIndexes[type]!.length,
             'indexes': (_remarkIndexes[type]!.toList()..sort()),
             'words': _wordsForType(type),
           },
@@ -602,5 +638,28 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
       if (_remarkIndexes[type]!.contains(index)) return type;
     }
     return null;
+  }
+
+  void _applySuggestedRemarks() {
+    final suggestions = widget.submission?.suggestedRemarks;
+    if (suggestions == null) return;
+    _applySuggestion(_RemarkType.omission, suggestions.omission);
+    _applySuggestion(_RemarkType.repetition, suggestions.repetition);
+    _applySuggestion(_RemarkType.selfCorrection, suggestions.selfCorrection);
+    _applySuggestion(
+      _RemarkType.mispronunciation,
+      suggestions.mispronunciation,
+    );
+  }
+
+  void _applySuggestion(_RemarkType type, ReadingRemarkSuggestion suggestion) {
+    final wordCount = _transcriptWords.length;
+    final indexes = suggestion.transcriptIndexes
+        .where((index) => index >= 0 && index < wordCount)
+        .toSet();
+    _remarkIndexes[type]!.addAll(indexes);
+    _remarkCounts[type] = indexes.length > suggestion.count
+        ? indexes.length
+        : suggestion.count;
   }
 }

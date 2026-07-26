@@ -80,6 +80,7 @@ class ReadingSubmissionReview {
   final double? readingAccuracy;
   final int quizScore;
   final int quizTotal;
+  final SuggestedReadingRemarks? suggestedRemarks;
 
   const ReadingSubmissionReview({
     required this.id,
@@ -95,6 +96,7 @@ class ReadingSubmissionReview {
     required this.readingAccuracy,
     required this.quizScore,
     required this.quizTotal,
+    this.suggestedRemarks,
   });
 }
 
@@ -103,6 +105,48 @@ class TranscriptWordDiff {
   final String status;
 
   const TranscriptWordDiff({required this.word, required this.status});
+}
+
+class SuggestedReadingRemarks {
+  final int version;
+  final String source;
+  final ReadingRemarkSuggestion omission;
+  final ReadingRemarkSuggestion repetition;
+  final ReadingRemarkSuggestion selfCorrection;
+  final ReadingRemarkSuggestion mispronunciation;
+
+  const SuggestedReadingRemarks({
+    this.version = 1,
+    this.source = 'deterministic_alignment',
+    required this.omission,
+    required this.repetition,
+    required this.selfCorrection,
+    required this.mispronunciation,
+  });
+
+  bool get hasSuggestions =>
+      omission.count > 0 ||
+      repetition.count > 0 ||
+      selfCorrection.count > 0 ||
+      mispronunciation.count > 0;
+}
+
+class ReadingRemarkSuggestion {
+  final String label;
+  final int count;
+  final List<int> transcriptIndexes;
+  final List<int> expectedIndexes;
+  final List<String> words;
+  final String confidence;
+
+  const ReadingRemarkSuggestion({
+    required this.label,
+    required this.count,
+    required this.transcriptIndexes,
+    required this.expectedIndexes,
+    required this.words,
+    required this.confidence,
+  });
 }
 
 class EvaluationMetrics {

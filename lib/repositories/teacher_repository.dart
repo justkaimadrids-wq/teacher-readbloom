@@ -452,7 +452,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         .from('reading_submissions')
         .select(
           'id,student_id,book_title_snapshot,passage_text_snapshot,video_path,status,submitted_at,created_at,'
-          'transcript_results(raw_transcript,alignment_json,overall_accuracy),'
+          'transcript_results(raw_transcript,alignment_json,overall_accuracy,suggested_remarks_json,suggested_omission_count,suggested_repetition_count,suggested_self_correction_count,suggested_mispronunciation_count),'
           'quiz_answers(is_correct)',
         )
         .inFilter('status', ['submitted', 'processed'])
@@ -489,6 +489,17 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         readingAccuracy: _toDouble(transcript['overall_accuracy']),
         quizScore: quizScore,
         quizTotal: quizTotal,
+        suggestedRemarks: _suggestedRemarksFromJson(
+          transcript['suggested_remarks_json'],
+          omissionCount: (transcript['suggested_omission_count'] as num?)
+              ?.toInt(),
+          repetitionCount: (transcript['suggested_repetition_count'] as num?)
+              ?.toInt(),
+          selfCorrectionCount:
+              (transcript['suggested_self_correction_count'] as num?)?.toInt(),
+          mispronunciationCount:
+              (transcript['suggested_mispronunciation_count'] as num?)?.toInt(),
+        ),
       );
       result.putIfAbsent(studentId, () => []).add(review);
     }
@@ -882,8 +893,11 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
   }
 
   List<TranscriptWordDiff> _alignmentFromJson(dynamic rawAlignment) {
-    if (rawAlignment is! List) return const [];
-    return rawAlignment
+    final alignment = rawAlignment is Map
+        ? rawAlignment['tokens']
+        : rawAlignment;
+    if (alignment is! List) return const [];
+    return alignment
         .map<TranscriptWordDiff>((item) {
           if (item is! Map) {
             return TranscriptWordDiff(word: item.toString(), status: 'matched');
@@ -899,6 +913,111 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
           );
         })
         .where((diff) => diff.word.trim().isNotEmpty)
+        .toList();
+  }
+
+  SuggestedReadingRemarks? _suggestedRemarksFromJson(
+    dynamic raw, {
+    int? omissionCount,
+    int? repetitionCount,
+    int? selfCorrectionCount,
+    int? mispronunciationCount,
+  }) {
+    try {
+      if (raw is! Map) {
+        final hasCounts =
+            (omissionCount ?? 0) > 0 ||
+            (repetitionCount ?? 0) > 0 ||
+            (selfCorrectionCount ?? 0) > 0 ||
+            (mispronunciationCount ?? 0) > 0;
+        if (!hasCounts) return null;
+        return SuggestedReadingRemarks(
+          version: 1,
+          source: 'deterministic_alignment',
+          omission: _emptyRemark('Omission', omissionCount ?? 0),
+          repetition: _emptyRemark('Repetition', repetitionCount ?? 0),
+          selfCorrection: _emptyRemark(
+            'Self-Correction',
+            selfCorrectionCount ?? 0,
+          ),
+          mispronunciation: _emptyRemark(
+            'Possible Mispronunciation',
+            mispronunciationCount ?? 0,
+          ),
+        );
+      }
+
+      final remarks = raw['remarks'];
+      if (remarks is! Map) return null;
+      return SuggestedReadingRemarks(
+        version: (raw['version'] as num?)?.toInt() ?? 1,
+        source: raw['source'] as String? ?? 'deterministic_alignment',
+        omission: _remarkSuggestionFromJson(
+          remarks['omission'],
+          fallbackLabel: 'Omission',
+          fallbackCount: omissionCount,
+        ),
+        repetition: _remarkSuggestionFromJson(
+          remarks['repetition'],
+          fallbackLabel: 'Repetition',
+          fallbackCount: repetitionCount,
+        ),
+        selfCorrection: _remarkSuggestionFromJson(
+          remarks['selfCorrection'],
+          fallbackLabel: 'Self-Correction',
+          fallbackCount: selfCorrectionCount,
+        ),
+        mispronunciation: _remarkSuggestionFromJson(
+          remarks['mispronunciation'],
+          fallbackLabel: 'Possible Mispronunciation',
+          fallbackCount: mispronunciationCount,
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  ReadingRemarkSuggestion _remarkSuggestionFromJson(
+    dynamic raw, {
+    required String fallbackLabel,
+    int? fallbackCount,
+  }) {
+    if (raw is! Map) return _emptyRemark(fallbackLabel, fallbackCount ?? 0);
+    return ReadingRemarkSuggestion(
+      label: raw['label'] as String? ?? fallbackLabel,
+      count: (raw['count'] as num?)?.toInt() ?? fallbackCount ?? 0,
+      transcriptIndexes: _intList(raw['transcriptIndexes'] ?? raw['indexes']),
+      expectedIndexes: _intList(raw['expectedIndexes']),
+      words: _stringList(raw['words']),
+      confidence: raw['confidence'] as String? ?? '',
+    );
+  }
+
+  ReadingRemarkSuggestion _emptyRemark(String label, int count) {
+    return ReadingRemarkSuggestion(
+      label: label,
+      count: count,
+      transcriptIndexes: const [],
+      expectedIndexes: const [],
+      words: const [],
+      confidence: '',
+    );
+  }
+
+  List<int> _intList(dynamic value) {
+    if (value is! List) return const [];
+    return value
+        .map((item) => item is num ? item.toInt() : int.tryParse('$item'))
+        .whereType<int>()
+        .toList();
+  }
+
+  List<String> _stringList(dynamic value) {
+    if (value is! List) return const [];
+    return value
+        .map((item) => item.toString().trim())
+        .where((item) => item.isNotEmpty)
         .toList();
   }
 

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'app_dialogs.dart';
 
 Future<T> runWithLoadingDialog<T>(
   BuildContext context,
@@ -31,17 +34,28 @@ class _LoadingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      child: AlertDialog(
-        content: Row(
+      child: AppDialogFrame(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 3),
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: Color(0xFFF7DD68),
+              ),
             ),
             const SizedBox(width: 18),
-            Flexible(child: Text(message)),
+            Flexible(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ],
         ),
       ),

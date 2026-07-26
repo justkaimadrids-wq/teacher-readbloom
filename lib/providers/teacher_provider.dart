@@ -27,6 +27,7 @@ class TeacherProvider extends ChangeNotifier {
   bool _isBooksLoading = false;
   bool _isGeneratingBookDraft = false;
   bool _isTeacherDataLoading = false;
+  bool _isRefreshingData = false;
   bool _isSavingFeedback = false;
   bool _isUpdatingSkillLevel = false;
   String? _booksError;
@@ -65,6 +66,7 @@ class TeacherProvider extends ChangeNotifier {
   List<StudentProgress> get students => _students;
   List<StudentActivity> get activities => _activities;
   bool get isTeacherDataLoading => _isTeacherDataLoading;
+  bool get isRefreshingData => _isRefreshingData;
   bool get isSavingFeedback => _isSavingFeedback;
   bool get isUpdatingSkillLevel => _isUpdatingSkillLevel;
   String? get teacherDataError => _teacherDataError;
@@ -475,6 +477,22 @@ class TeacherProvider extends ChangeNotifier {
       return 'Unable to update profile picture right now.';
     } finally {
       _isUploadingAvatar = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> refreshData() async {
+    if (_isRefreshingData || !_isLoggedIn) return null;
+
+    _isRefreshingData = true;
+    notifyListeners();
+    try {
+      await _loadAccountState();
+      return _teacherDataError;
+    } catch (_) {
+      return 'Unable to refresh teacher data right now.';
+    } finally {
+      _isRefreshingData = false;
       notifyListeners();
     }
   }

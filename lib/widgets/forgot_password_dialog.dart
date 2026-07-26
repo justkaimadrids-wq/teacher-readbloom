@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_dialogs.dart';
 import 'loading_dialog.dart';
 
 Future<void> showForgotPasswordDialog(
@@ -11,21 +12,8 @@ Future<void> showForgotPasswordDialog(
   return showDialog<void>(
     context: context,
     builder: (dialogContext) {
-      return AlertDialog(
-        title: const Text('Forgot Password'),
-        content: SizedBox(
-          width: 360,
-          child: TextField(
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              hintText: 'Enter your email',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-          ),
-        ),
+      return AppDialogFrame(
+        title: 'Forgot Password',
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
@@ -68,6 +56,19 @@ Future<void> showForgotPasswordDialog(
             child: const Text('Send'),
           ),
         ],
+        child: SizedBox(
+          width: 360,
+          child: TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              hintText: 'Enter your email',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+          ),
+        ),
       );
     },
   ).whenComplete(emailController.dispose);
