@@ -25,10 +25,12 @@ class TeacherProvider extends ChangeNotifier {
   bool _isPasswordRecovery = false;
   bool _isUploadingAvatar = false;
   bool _isBooksLoading = false;
+  bool _isGeneratingBookDraft = false;
   bool _isTeacherDataLoading = false;
   bool _isSavingFeedback = false;
   bool _isUpdatingSkillLevel = false;
   String? _booksError;
+  String? _generateBookDraftError;
   String? _teacherDataError;
   StudentProgress? _selectedStudentForEvaluation;
   StreamSubscription<AuthState>? _authStateSubscription;
@@ -71,7 +73,9 @@ class TeacherProvider extends ChangeNotifier {
       (_students.isNotEmpty ? _students[0] : null);
   List<Book> get books => _books;
   bool get isBooksLoading => _isBooksLoading;
+  bool get isGeneratingBookDraft => _isGeneratingBookDraft;
   String? get booksError => _booksError;
+  String? get generateBookDraftError => _generateBookDraftError;
   List<String> get availableGrades {
     final grades = _students.map((student) => student.grade).toSet().toList()
       ..sort();
@@ -279,6 +283,59 @@ class TeacherProvider extends ChangeNotifier {
       return _booksError;
     } finally {
       _isBooksLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<GeneratedBookDraft?> generateBookDraft({
+    required String prompt,
+    required String grade,
+    required String section,
+    required int quizCount,
+    required String passageLength,
+  }) async {
+    final cleanedPrompt = prompt.trim();
+    final cleanedGrade = grade.trim();
+    final cleanedSection = section.trim();
+    final cleanedPassageLength = passageLength.trim();
+
+    if (cleanedPrompt.isEmpty) {
+      _generateBookDraftError = 'Please enter a prompt first.';
+      notifyListeners();
+      return null;
+    }
+    if (cleanedGrade.isEmpty || cleanedSection.isEmpty) {
+      _generateBookDraftError = 'Please choose a grade and section first.';
+      notifyListeners();
+      return null;
+    }
+    if (quizCount < 1 || quizCount > 3) {
+      _generateBookDraftError = 'Quiz count must be between 1 and 3.';
+      notifyListeners();
+      return null;
+    }
+    if (!const ['short', 'medium', 'long'].contains(cleanedPassageLength)) {
+      _generateBookDraftError = 'Please choose a passage length.';
+      notifyListeners();
+      return null;
+    }
+
+    _isGeneratingBookDraft = true;
+    _generateBookDraftError = null;
+    notifyListeners();
+    try {
+      return await _teacherRepository.generateBookDraft(
+        prompt: cleanedPrompt,
+        grade: cleanedGrade,
+        section: cleanedSection,
+        quizCount: quizCount,
+        passageLength: cleanedPassageLength,
+      );
+    } catch (_) {
+      _generateBookDraftError = 'Unable to generate book content right now.';
+      return null;
+    } finally {
+      _isGeneratingBookDraft = false;
       notifyListeners();
     }
   }

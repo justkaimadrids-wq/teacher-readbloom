@@ -57,6 +57,13 @@ abstract class TeacherRepository {
     required String studentId,
     required String badgeName,
   });
+  Future<GeneratedBookDraft> generateBookDraft({
+    required String prompt,
+    required String grade,
+    required String section,
+    required int quizCount,
+    required String passageLength,
+  });
   Future<Book> addBook({
     required String title,
     required String grade,
@@ -158,6 +165,36 @@ class MockTeacherRepository implements TeacherRepository {
     required String studentId,
     required String badgeName,
   }) async {}
+
+  @override
+  Future<GeneratedBookDraft> generateBookDraft({
+    required String prompt,
+    required String grade,
+    required String section,
+    required int quizCount,
+    required String passageLength,
+  }) async {
+    final count = quizCount.clamp(1, 3);
+    return GeneratedBookDraft(
+      title: 'Generated $grade Reading',
+      passageText:
+          'Maya helped her classmates read a short story about ${prompt.trim()}. '
+          'They talked about the lesson and shared what they learned.',
+      questions: List.generate(
+        count,
+        (index) => BookQuestionInput(
+          questionText: 'Generated question ${index + 1}?',
+          options: const [
+            'First choice',
+            'Second choice',
+            'Third choice',
+            'Fourth choice',
+          ],
+          correctOptionIndex: 0,
+        ),
+      ),
+    );
+  }
 
   @override
   Future<Book> addBook({
@@ -739,6 +776,60 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         };
       }).toList(),
     });
+  }
+
+  @override
+  Future<GeneratedBookDraft> generateBookDraft({
+    required String prompt,
+    required String grade,
+    required String section,
+    required int quizCount,
+    required String passageLength,
+  }) async {
+    final client = SupabaseService.client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      return super.generateBookDraft(
+        prompt: prompt,
+        grade: grade,
+        section: section,
+        quizCount: quizCount,
+        passageLength: passageLength,
+      );
+    }
+
+    final teacherSectionRow = await client
+        .from('teacher_sections')
+        .select('sections!inner(id,grade_level,name)')
+        .eq('teacher_id', user.id)
+        .eq('sections.grade_level', grade)
+        .eq('sections.name', section)
+        .maybeSingle();
+    final sectionRow = teacherSectionRow?['sections'] as Map<String, dynamic>?;
+    final sectionId = sectionRow?['id'] as String?;
+    if (sectionId == null) {
+      throw StateError('Selected section was not found.');
+    }
+
+    final response = await client.functions.invoke(
+      'generate-book-content',
+      body: {
+        'prompt': prompt,
+        'gradeLevel': grade,
+        'sectionId': sectionId,
+        'quizCount': quizCount,
+        'passageLength': passageLength,
+      },
+    );
+
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return GeneratedBookDraft.fromJson(data);
+    }
+    if (data is Map) {
+      return GeneratedBookDraft.fromJson(Map<String, dynamic>.from(data));
+    }
+    throw const FormatException('Generated book response is malformed.');
   }
 
   Book _bookFromRow(Map<String, dynamic> row) {

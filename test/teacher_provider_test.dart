@@ -60,6 +60,19 @@ class BadgeFixtureTeacherRepository extends MockTeacherRepository {
   Future<List<StudentProgress>> getCurrentStudents() async => getStudents();
 }
 
+class FailingGenerateTeacherRepository extends MockTeacherRepository {
+  @override
+  Future<GeneratedBookDraft> generateBookDraft({
+    required String prompt,
+    required String grade,
+    required String section,
+    required int quizCount,
+    required String passageLength,
+  }) {
+    throw StateError('generation failed');
+  }
+}
+
 void main() {
   test('addBook appends a valid book through repository boundary', () async {
     final provider = TeacherProvider();
@@ -100,6 +113,95 @@ void main() {
     await provider.addBadgeToStudent(student.id, student.badges.first);
 
     expect(provider.students.first.badges.length, initialBadgeCount);
+  });
+
+  test('generateBookDraft rejects empty prompt', () async {
+    final provider = TeacherProvider();
+
+    final draft = await provider.generateBookDraft(
+      prompt: '   ',
+      grade: 'Grade 4',
+      section: 'Section A',
+      quizCount: 3,
+      passageLength: 'short',
+    );
+
+    expect(draft, isNull);
+    expect(provider.generateBookDraftError, 'Please enter a prompt first.');
+  });
+
+  test('generateBookDraft rejects missing section', () async {
+    final provider = TeacherProvider();
+
+    final draft = await provider.generateBookDraft(
+      prompt: 'Create a story.',
+      grade: 'Grade 4',
+      section: '',
+      quizCount: 3,
+      passageLength: 'short',
+    );
+
+    expect(draft, isNull);
+    expect(
+      provider.generateBookDraftError,
+      'Please choose a grade and section first.',
+    );
+  });
+
+  test('generateBookDraft rejects quiz count outside one to three', () async {
+    final provider = TeacherProvider();
+
+    final draft = await provider.generateBookDraft(
+      prompt: 'Create a story.',
+      grade: 'Grade 4',
+      section: 'Section A',
+      quizCount: 4,
+      passageLength: 'short',
+    );
+
+    expect(draft, isNull);
+    expect(
+      provider.generateBookDraftError,
+      'Quiz count must be between 1 and 3.',
+    );
+  });
+
+  test('generateBookDraft returns draft without saving a book', () async {
+    final provider = TeacherProvider();
+    final initialBookCount = provider.books.length;
+
+    final draft = await provider.generateBookDraft(
+      prompt: 'Create a story about teamwork.',
+      grade: 'Grade 4',
+      section: 'Section A',
+      quizCount: 2,
+      passageLength: 'short',
+    );
+
+    expect(draft, isNotNull);
+    expect(draft!.questions, hasLength(2));
+    expect(provider.books.length, initialBookCount);
+    expect(provider.generateBookDraftError, isNull);
+  });
+
+  test('generateBookDraft exposes readable repository failure', () async {
+    final provider = TeacherProvider(
+      teacherRepository: FailingGenerateTeacherRepository(),
+    );
+
+    final draft = await provider.generateBookDraft(
+      prompt: 'Create a story.',
+      grade: 'Grade 4',
+      section: 'Section A',
+      quizCount: 1,
+      passageLength: 'short',
+    );
+
+    expect(draft, isNull);
+    expect(
+      provider.generateBookDraftError,
+      'Unable to generate book content right now.',
+    );
   });
 
   test('password reset rejects mismatched confirmation', () async {
