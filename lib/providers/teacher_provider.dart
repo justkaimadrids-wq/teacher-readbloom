@@ -131,10 +131,13 @@ class TeacherProvider extends ChangeNotifier {
   Future<String?> addBadgeToStudent(String studentId, String badge) async {
     final index = _students.indexWhere((s) => s.id == studentId);
     final cleanedBadge = badge.trim();
-    if (index == -1 || cleanedBadge.isEmpty) return null;
+    if (cleanedBadge.isEmpty) return 'Please enter a badge name first.';
+    if (index == -1) return 'Student was not found.';
 
     final currentStudent = _students[index];
-    if (currentStudent.badges.contains(cleanedBadge)) return null;
+    if (currentStudent.badges.contains(cleanedBadge)) {
+      return '${currentStudent.name} already has this badge.';
+    }
 
     try {
       await _teacherRepository.awardBadgeToStudent(

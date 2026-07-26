@@ -109,3 +109,44 @@ Future<void> showAppMessageDialog(
     ),
   );
 }
+
+Future<bool> showAppConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  String cancelLabel = 'Keep Editing',
+  String confirmLabel = 'Continue',
+  bool isDanger = false,
+}) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AppDialogFrame(
+      title: title,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(cancelLabel),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isDanger
+                ? TeacherTheme.danger
+                : const Color(0xFFF7DD68),
+            foregroundColor: isDanger ? Colors.white : const Color(0xFF1F2937),
+          ),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(confirmLabel),
+        ),
+      ],
+      child: Text(
+        message,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          height: 1.45,
+          color: Colors.white.withValues(alpha: 0.78),
+        ),
+      ),
+    ),
+  );
+  return result ?? false;
+}

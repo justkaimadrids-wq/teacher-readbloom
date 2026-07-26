@@ -17,15 +17,26 @@ class VideoReviewDialog extends StatefulWidget {
 }
 
 class _VideoReviewDialogState extends State<VideoReviewDialog> {
-  late final VideoPlayerController _controller;
+  late VideoPlayerController _controller;
+  bool _hasVideoError = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) setState(() {});
-      });
+    _initializeVideo();
+  }
+
+  void _initializeVideo() {
+    _hasVideoError = false;
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+    _controller
+        .initialize()
+        .then((_) {
+          if (mounted) setState(() {});
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _hasVideoError = true);
+        });
   }
 
   @override
@@ -78,6 +89,40 @@ class _VideoReviewDialogState extends State<VideoReviewDialog> {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: VideoPlayer(_controller),
+                        )
+                      : _hasVideoError
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.white70,
+                                  size: 36,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Unable to load this reading video.',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    _controller.dispose();
+                                    setState(() => _initializeVideo());
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          ),
                         )
                       : const Center(child: CircularProgressIndicator()),
                 ),

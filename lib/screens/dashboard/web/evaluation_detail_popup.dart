@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../models/teacher_models.dart';
 import '../../../providers/teacher_provider.dart';
+import '../../../widgets/app_dialogs.dart';
 import '../../../widgets/loading_dialog.dart';
 import '../widgets/video_review_dialog.dart';
 
@@ -50,12 +51,14 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
   final TextEditingController _feedbackController = TextEditingController();
   _RemarkType? _activeType;
   bool _isSending = false;
+  String _initialFeedbackJson = '';
 
   @override
   void initState() {
     super.initState();
     _feedbackController.text = widget.eval.feedback;
     _applySuggestedRemarks();
+    _initialFeedbackJson = _composeFeedback();
   }
 
   @override
@@ -74,69 +77,95 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 750;
 
-    return Center(
-      child: Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: isMobile
-            ? const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
-            : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-            child: Container(
-              width: isMobile ? double.infinity : 1080,
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.88,
-              ),
-              padding: EdgeInsets.all(isMobile ? 20 : 30),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.48),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  width: 1.5,
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) await _closePopup(context);
+      },
+      child: Center(
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: isMobile
+              ? const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
+              : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+              child: Container(
+                width: isMobile ? double.infinity : 1080,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.88,
                 ),
-              ),
-              child: Column(
-                children: [
-                  _buildHeader(context, isMobile),
-                  const SizedBox(height: 14),
-                  const Divider(color: Colors.white24, thickness: 1),
-                  const SizedBox(height: 14),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: isMobile
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: _content(context, true),
-                            )
-                          : Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 250,
-                                  child: _buildLeftColumn(context, false),
-                                ),
-                                const SizedBox(width: 24),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: _buildMainColumn(context, false),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
+                padding: EdgeInsets.all(isMobile ? 20 : 30),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.48),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1.5,
                   ),
-                ],
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(context, isMobile),
+                    const SizedBox(height: 14),
+                    const Divider(color: Colors.white24, thickness: 1),
+                    const SizedBox(height: 14),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: isMobile
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: _content(context, true),
+                              )
+                            : Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: 250,
+                                    child: _buildLeftColumn(context, false),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: _buildMainColumn(
+                                        context,
+                                        false,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  bool get _isDirty => _composeFeedback() != _initialFeedbackJson;
+
+  Future<void> _closePopup(BuildContext context) async {
+    if (_isSending) return;
+    if (_isDirty) {
+      final shouldClose = await showAppConfirmDialog(
+        context,
+        title: 'Discard Feedback Changes?',
+        message: 'Your edited remarks and feedback have not been sent yet.',
+        confirmLabel: 'Discard',
+        isDanger: true,
+      );
+      if (!shouldClose || !context.mounted) return;
+    }
+    Navigator.of(context).pop();
   }
 
   List<Widget> _content(BuildContext context, bool isMobile) {
@@ -179,7 +208,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
           ),
         ),
         IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => _closePopup(context),
           icon: const Icon(Icons.close, color: Colors.white70),
         ),
       ],
@@ -569,14 +598,24 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     if (selectedSubmission == null) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Text('No selected reading submission was found.'),
-          backgroundColor: Colors.red.shade700,
-        ),
+      await showAppMessageDialog(
+        context,
+        title: 'Feedback Not Sent',
+        message: 'No selected reading submission was found.',
+        isDanger: true,
       );
       return;
     }
+
+    final shouldSend = await showAppConfirmDialog(
+      context,
+      title: 'Send Feedback?',
+      message:
+          'Send this feedback report to ${widget.student.name} for ${widget.storyTitle}?',
+      cancelLabel: 'Review More',
+      confirmLabel: 'Send',
+    );
+    if (!shouldSend || !context.mounted) return;
 
     setState(() => _isSending = true);
     final error = await runWithLoadingDialog(
@@ -588,12 +627,15 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
       ),
       message: 'Sending feedback...',
     );
-    if (!mounted) return;
+    if (!mounted || !context.mounted) return;
     setState(() => _isSending = false);
 
     if (error != null) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+      await showAppMessageDialog(
+        context,
+        title: 'Feedback Not Sent',
+        message: error,
+        isDanger: true,
       );
       return;
     }
