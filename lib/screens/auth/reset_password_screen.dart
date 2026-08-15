@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../providers/teacher_provider.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/app_dialogs.dart';
 import '../../widgets/loading_dialog.dart';
+import 'login_screen.dart';
 
 class TeacherResetPasswordScreen extends StatefulWidget {
   const TeacherResetPasswordScreen({super.key});
@@ -28,7 +30,6 @@ class _TeacherResetPasswordScreenState
   }
 
   Future<void> _savePassword() async {
-    final messenger = ScaffoldMessenger.of(context);
     final result = await runWithLoadingDialog<AuthResult>(
       context,
       () => context.read<TeacherProvider>().completePasswordReset(
@@ -39,13 +40,24 @@ class _TeacherResetPasswordScreenState
     );
     if (!mounted) return;
     if (!result.success) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(result.message ?? 'Unable to update password.')),
+      await showAppMessageDialog(
+        context,
+        title: 'Password Not Updated',
+        message: result.message ?? 'Unable to update password.',
+        isDanger: true,
       );
       return;
     }
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Password updated. Please log in again.')),
+    await showAppMessageDialog(
+      context,
+      title: 'Password Updated',
+      message: 'Please log in again with your new password.',
+      buttonLabel: 'Go To Login',
+    );
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const TeacherLoginScreen()),
+      (route) => false,
     );
   }
 

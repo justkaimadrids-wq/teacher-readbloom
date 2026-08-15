@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
+import '../../../widgets/app_dialogs.dart';
 import '../../../widgets/loading_dialog.dart';
 
 class BooksWebBody extends StatefulWidget {
@@ -31,6 +32,27 @@ class _BooksWebBodyState extends State<BooksWebBody> {
     super.dispose();
   }
 
+  bool _isAddBookDirty() {
+    return _titleController.text.trim().isNotEmpty ||
+        _contentController.text.trim().isNotEmpty ||
+        _questionDrafts.any((draft) => draft.hasContent);
+  }
+
+  Future<void> _closeAddBookDialog(BuildContext context) async {
+    if (_isAddBookDirty()) {
+      final shouldClose = await showAppConfirmDialog(
+        context,
+        title: 'Discard Book Draft?',
+        message:
+            'Your title, passage, and quiz questions will be lost if you close this form.',
+        confirmLabel: 'Discard',
+        isDanger: true,
+      );
+      if (!shouldClose || !context.mounted) return;
+    }
+    Navigator.of(context).pop();
+  }
+
   void _showAddBookDialog(BuildContext context) {
     final prov = context.read<TeacherProvider>();
     final sectionChoices = _sectionChoicesFor(prov);
@@ -44,36 +66,513 @@ class _BooksWebBodyState extends State<BooksWebBody> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.45),
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return Center(
-              child: Dialog(
-                backgroundColor: Colors.transparent,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                    child: Container(
-                      width: 600,
-                      constraints: BoxConstraints(
-                        maxHeight:
-                            MediaQuery.of(context).size.height -
-                            MediaQuery.of(context).viewInsets.bottom -
-                            64,
-                      ),
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 1.5,
+            return PopScope<Object?>(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) async {
+                if (!didPop) await _closeAddBookDialog(context);
+              },
+              child: Center(
+                child: Dialog(
+                  backgroundColor: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                      child: Container(
+                        width: 600,
+                        constraints: BoxConstraints(
+                          maxHeight:
+                              MediaQuery.of(context).size.height -
+                              MediaQuery.of(context).viewInsets.bottom -
+                              64,
+                        ),
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Add New Book',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          _closeAddBookDialog(context),
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Fill in the details below to publish a new book for students.',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 13,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Title Field
+                                Text(
+                                  'Book Title',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextFormField(
+                                  controller: _titleController,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                  decoration: _glassInputDecoration(
+                                    'Book Title',
+                                    hintText: 'Enter book title...',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Please enter a title';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Grade & Section Selection Row
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Grade Level',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Container(
+                                            height: 48,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.15,
+                                                ),
+                                              ),
+                                            ),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<String>(
+                                                value: _selectedGrade,
+                                                dropdownColor: const Color(
+                                                  0xFF1E293B,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: Colors.white70,
+                                                ),
+                                                isExpanded: true,
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                ),
+                                                onChanged: (newValue) {
+                                                  setDialogState(() {
+                                                    _selectedGrade = newValue!;
+                                                    _selectedSection =
+                                                        sectionChoices
+                                                            .firstWhere(
+                                                              (choice) =>
+                                                                  choice
+                                                                      .grade ==
+                                                                  _selectedGrade,
+                                                            )
+                                                            .section;
+                                                  });
+                                                },
+                                                items: sectionChoices
+                                                    .map(
+                                                      (choice) => choice.grade,
+                                                    )
+                                                    .toSet()
+                                                    .map<
+                                                      DropdownMenuItem<String>
+                                                    >((String value) {
+                                                      return DropdownMenuItem<
+                                                        String
+                                                      >(
+                                                        value: value,
+                                                        child: Text(value),
+                                                      );
+                                                    })
+                                                    .toList(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Section',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Container(
+                                            height: 48,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.15,
+                                                ),
+                                              ),
+                                            ),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<String>(
+                                                value: _selectedSection,
+                                                dropdownColor: const Color(
+                                                  0xFF1E293B,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: Colors.white70,
+                                                ),
+                                                isExpanded: true,
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                ),
+                                                onChanged: (newValue) {
+                                                  setDialogState(() {
+                                                    _selectedSection =
+                                                        newValue!;
+                                                  });
+                                                },
+                                                items: sectionChoices
+                                                    .where(
+                                                      (choice) =>
+                                                          choice.grade ==
+                                                          _selectedGrade,
+                                                    )
+                                                    .map<
+                                                      DropdownMenuItem<String>
+                                                    >((choice) {
+                                                      return DropdownMenuItem<
+                                                        String
+                                                      >(
+                                                        value: choice.section,
+                                                        child: Text(
+                                                          choice.section,
+                                                        ),
+                                                      );
+                                                    })
+                                                    .toList(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 46,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _showAutoGenerateDialog(
+                                      context,
+                                      setDialogState,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.auto_awesome,
+                                      size: 19,
+                                    ),
+                                    label: Text(
+                                      'Auto Generate',
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFFFBBF24),
+                                      side: BorderSide(
+                                        color: const Color(
+                                          0xFFFBBF24,
+                                        ).withValues(alpha: 0.75),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Content Field
+                                Text(
+                                  'Book Content (Paste full texts)',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TextFormField(
+                                  controller: _contentController,
+                                  maxLines: 8,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                  decoration: _glassInputDecoration(
+                                    'Book Content',
+                                    hintText:
+                                        'Paste the book/story content here...',
+                                    contentPadding: const EdgeInsets.all(16),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Please enter book content';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 24),
+                                ...List.generate(
+                                  _questionDrafts.length,
+                                  (index) => _buildQuestionFields(
+                                    setDialogState,
+                                    _questionDrafts[index],
+                                    index,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Submit Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: prov.isBooksLoading
+                                        ? null
+                                        : () async {
+                                            if (_formKey.currentState!
+                                                .validate()) {
+                                              final messenger =
+                                                  ScaffoldMessenger.of(context);
+                                              final navigator = Navigator.of(
+                                                context,
+                                              );
+                                              final error =
+                                                  await runWithLoadingDialog(
+                                                    context,
+                                                    () => context
+                                                        .read<TeacherProvider>()
+                                                        .addBook(
+                                                          title:
+                                                              _titleController
+                                                                  .text,
+                                                          grade: _selectedGrade,
+                                                          section:
+                                                              _selectedSection,
+                                                          content:
+                                                              _contentController
+                                                                  .text,
+                                                          questions:
+                                                              _questionDrafts
+                                                                  .map(
+                                                                    (
+                                                                      draft,
+                                                                    ) => draft
+                                                                        .toInput(),
+                                                                  )
+                                                                  .toList(),
+                                                        ),
+                                                    message: 'Saving book...',
+                                                  );
+                                              if (error != null) {
+                                                if (!context.mounted) return;
+                                                await showAppMessageDialog(
+                                                  context,
+                                                  title: 'Book Not Published',
+                                                  message: error,
+                                                  isDanger: true,
+                                                );
+                                                return;
+                                              }
+                                              navigator.pop();
+                                              messenger.showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Book added successfully!',
+                                                  ),
+                                                  backgroundColor: Colors.green,
+                                                ),
+                                              );
+                                            }
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF60A5FA),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: prov.isBooksLoading
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
+                                            'Publish Book',
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      child: Form(
-                        key: _formKey,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAutoGenerateDialog(
+    BuildContext addBookContext,
+    StateSetter setAddBookState,
+  ) {
+    final promptController = TextEditingController();
+    var quizCount = 3;
+    var passageLength = 'short';
+    var isGenerating = false;
+
+    Future<void> closeGenerateDialog(BuildContext context) async {
+      if (isGenerating) return;
+      if (promptController.text.trim().isNotEmpty) {
+        final shouldClose = await showAppConfirmDialog(
+          context,
+          title: 'Discard Prompt?',
+          message: 'Your story prompt and generation settings will be lost.',
+          confirmLabel: 'Discard',
+          isDanger: true,
+        );
+        if (!shouldClose || !context.mounted) return;
+      }
+      Navigator.of(context).pop();
+    }
+
+    showDialog(
+      context: addBookContext,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setGenerateState) {
+            return PopScope<Object?>(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) async {
+                if (!didPop) await closeGenerateDialog(dialogContext);
+              },
+              child: Center(
+                child: Dialog(
+                  backgroundColor: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                      child: Container(
+                        width: 460,
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            width: 1.5,
+                          ),
+                        ),
                         child: SingleChildScrollView(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -84,7 +583,7 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Add New Book',
+                                    'Auto Generate',
                                     style: GoogleFonts.outfit(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w900,
@@ -92,8 +591,11 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                     ),
                                   ),
                                   IconButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
+                                    onPressed: isGenerating
+                                        ? null
+                                        : () => closeGenerateDialog(
+                                            dialogContext,
+                                          ),
                                     icon: const Icon(
                                       Icons.close,
                                       color: Colors.white70,
@@ -101,355 +603,178 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Fill in the details below to publish a new book for students.',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Title Field
-                              Text(
-                                'Book Title',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              TextFormField(
-                                controller: _titleController,
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: promptController,
+                                maxLines: 4,
+                                maxLength: 1000,
                                 style: const TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontSize: 14,
                                 ),
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: 'Enter book title...',
-                                  hintStyle: const TextStyle(
-                                    color: Colors.black38,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 14,
-                                  ),
+                                decoration: _glassInputDecoration(
+                                  'Please state what story you like',
+                                  hintText: 'Create a passage about kindness.',
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter a title';
-                                  }
-                                  return null;
+                              ),
+                              const SizedBox(height: 12),
+                              DropdownButtonFormField<int>(
+                                initialValue: quizCount,
+                                dropdownColor: const Color(0xFF1E293B),
+                                style: GoogleFonts.outfit(color: Colors.white),
+                                decoration: _glassInputDecoration(
+                                  'Quiz questions',
+                                ),
+                                items: const [
+                                  DropdownMenuItem(value: 1, child: Text('1')),
+                                  DropdownMenuItem(value: 2, child: Text('2')),
+                                  DropdownMenuItem(value: 3, child: Text('3')),
+                                ],
+                                onChanged: (value) {
+                                  setGenerateState(
+                                    () => quizCount = value ?? 3,
+                                  );
                                 },
                               ),
-                              const SizedBox(height: 16),
-
-                              // Grade & Section Selection Row
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Grade Level',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white70,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Container(
-                                          height: 48,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.15,
-                                              ),
-                                            ),
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              value: _selectedGrade,
-                                              dropdownColor: const Color(
-                                                0xFF1E293B,
-                                              ),
-                                              icon: const Icon(
-                                                Icons.arrow_drop_down,
-                                                color: Colors.white70,
-                                              ),
-                                              isExpanded: true,
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13,
-                                              ),
-                                              onChanged: (newValue) {
-                                                setDialogState(() {
-                                                  _selectedGrade = newValue!;
-                                                  _selectedSection =
-                                                      sectionChoices
-                                                          .firstWhere(
-                                                            (choice) =>
-                                                                choice.grade ==
-                                                                _selectedGrade,
-                                                          )
-                                                          .section;
-                                                });
-                                              },
-                                              items: sectionChoices
-                                                  .map((choice) => choice.grade)
-                                                  .toSet()
-                                                  .map<
-                                                    DropdownMenuItem<String>
-                                                  >((String value) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: value,
-                                                      child: Text(value),
-                                                    );
-                                                  })
-                                                  .toList(),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              const SizedBox(height: 12),
+                              DropdownButtonFormField<String>(
+                                initialValue: passageLength,
+                                dropdownColor: const Color(0xFF1E293B),
+                                style: GoogleFonts.outfit(color: Colors.white),
+                                decoration: _glassInputDecoration(
+                                  'Passage length',
+                                ),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'short',
+                                    child: Text('Short'),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Section',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white70,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Container(
-                                          height: 48,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.15,
-                                              ),
-                                            ),
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              value: _selectedSection,
-                                              dropdownColor: const Color(
-                                                0xFF1E293B,
-                                              ),
-                                              icon: const Icon(
-                                                Icons.arrow_drop_down,
-                                                color: Colors.white70,
-                                              ),
-                                              isExpanded: true,
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13,
-                                              ),
-                                              onChanged: (newValue) {
-                                                setDialogState(() {
-                                                  _selectedSection = newValue!;
-                                                });
-                                              },
-                                              items: sectionChoices
-                                                  .where(
-                                                    (choice) =>
-                                                        choice.grade ==
-                                                        _selectedGrade,
-                                                  )
-                                                  .map<
-                                                    DropdownMenuItem<String>
-                                                  >((choice) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: choice.section,
-                                                      child: Text(
-                                                        choice.section,
-                                                      ),
-                                                    );
-                                                  })
-                                                  .toList(),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  DropdownMenuItem(
+                                    value: 'medium',
+                                    child: Text('Medium'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'long',
+                                    child: Text('Long'),
                                   ),
                                 ],
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Content Field
-                              Text(
-                                'Book Content (Paste full texts)',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              TextFormField(
-                                controller: _contentController,
-                                maxLines: 8,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                ),
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText:
-                                      'Paste the book/story content here...',
-                                  hintStyle: const TextStyle(
-                                    color: Colors.black38,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter book content';
-                                  }
-                                  return null;
+                                onChanged: (value) {
+                                  setGenerateState(
+                                    () => passageLength = value ?? 'short',
+                                  );
                                 },
                               ),
-                              const SizedBox(height: 24),
-                              ...List.generate(
-                                _questionDrafts.length,
-                                (index) => _buildQuestionFields(
-                                  setDialogState,
-                                  _questionDrafts[index],
-                                  index,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Submit Button
-                              SizedBox(
-                                width: double.infinity,
-                                height: 48,
-                                child: ElevatedButton(
-                                  onPressed: prov.isBooksLoading
-                                      ? null
-                                      : () async {
-                                          if (_formKey.currentState!
-                                              .validate()) {
-                                            final messenger =
-                                                ScaffoldMessenger.of(context);
-                                            final navigator = Navigator.of(
-                                              context,
+                              const SizedBox(height: 22),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: isGenerating
+                                        ? null
+                                        : () => closeGenerateDialog(
+                                            dialogContext,
+                                          ),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  ElevatedButton.icon(
+                                    onPressed: isGenerating
+                                        ? null
+                                        : () async {
+                                            setGenerateState(
+                                              () => isGenerating = true,
                                             );
-                                            final error =
+                                            final provider = addBookContext
+                                                .read<TeacherProvider>();
+                                            final messenger =
+                                                ScaffoldMessenger.of(
+                                                  addBookContext,
+                                                );
+                                            final navigator = Navigator.of(
+                                              dialogContext,
+                                            );
+                                            final draft =
                                                 await runWithLoadingDialog(
-                                                  context,
-                                                  () => context
-                                                      .read<TeacherProvider>()
-                                                      .addBook(
-                                                        title: _titleController
+                                                  dialogContext,
+                                                  () => provider
+                                                      .generateBookDraft(
+                                                        prompt: promptController
                                                             .text,
                                                         grade: _selectedGrade,
                                                         section:
                                                             _selectedSection,
-                                                        content:
-                                                            _contentController
-                                                                .text,
-                                                        questions:
-                                                            _questionDrafts
-                                                                .map(
-                                                                  (
-                                                                    draft,
-                                                                  ) => draft
-                                                                      .toInput(),
-                                                                )
-                                                                .toList(),
+                                                        quizCount: quizCount,
+                                                        passageLength:
+                                                            passageLength,
                                                       ),
-                                                  message: 'Saving book...',
+                                                  message: 'Generating book...',
                                                 );
-                                            if (error != null) {
-                                              messenger.showSnackBar(
-                                                SnackBar(content: Text(error)),
+
+                                            if (draft == null) {
+                                              if (dialogContext.mounted) {
+                                                setGenerateState(
+                                                  () => isGenerating = false,
+                                                );
+                                              }
+                                              if (!dialogContext.mounted) {
+                                                return;
+                                              }
+                                              await showAppMessageDialog(
+                                                dialogContext,
+                                                title: 'Generation Failed',
+                                                message:
+                                                    provider
+                                                        .generateBookDraftError ??
+                                                    'Unable to generate book content right now.',
+                                                isDanger: true,
                                               );
                                               return;
                                             }
+
+                                            if (_isAddBookDirty()) {
+                                              if (!dialogContext.mounted) {
+                                                return;
+                                              }
+                                              final shouldReplace =
+                                                  await showAppConfirmDialog(
+                                                    dialogContext,
+                                                    title:
+                                                        'Replace Current Draft?',
+                                                    message:
+                                                        'Generated content will replace the title, passage, and quiz questions currently in the form.',
+                                                    confirmLabel: 'Replace',
+                                                    isDanger: true,
+                                                  );
+                                              if (!shouldReplace) {
+                                                if (dialogContext.mounted) {
+                                                  setGenerateState(
+                                                    () => isGenerating = false,
+                                                  );
+                                                }
+                                                return;
+                                              }
+                                            }
+
+                                            setAddBookState(
+                                              () => _applyGeneratedDraft(draft),
+                                            );
                                             navigator.pop();
                                             messenger.showSnackBar(
                                               const SnackBar(
                                                 content: Text(
-                                                  'Book added successfully!',
+                                                  'Generated draft added to the form.',
                                                 ),
                                                 backgroundColor: Colors.green,
                                               ),
                                             );
-                                          }
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF60A5FA),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                          },
+                                    icon: const Icon(
+                                      Icons.auto_awesome,
+                                      size: 18,
                                     ),
+                                    label: const Text('Generate'),
                                   ),
-                                  child: prov.isBooksLoading
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Text(
-                                          'Publish Book',
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                ),
+                                ],
                               ),
                             ],
                           ),
@@ -463,7 +788,62 @@ class _BooksWebBodyState extends State<BooksWebBody> {
           },
         );
       },
+    ).whenComplete(promptController.dispose);
+  }
+
+  InputDecoration _glassInputDecoration(
+    String label, {
+    String? hintText,
+    EdgeInsetsGeometry? contentPadding,
+    Widget? prefixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      labelStyle: const TextStyle(color: Colors.white70),
+      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.1),
+      contentPadding:
+          contentPadding ??
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF60A5FA)),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+      ),
     );
+  }
+
+  void _applyGeneratedDraft(GeneratedBookDraft draft) {
+    _titleController.text = draft.title;
+    _contentController.text = draft.passageText;
+    for (final questionDraft in _questionDrafts) {
+      questionDraft.clear();
+    }
+    for (var index = 0; index < draft.questions.length; index++) {
+      final generatedQuestion = draft.questions[index];
+      final target = _questionDrafts[index];
+      target.questionController.text = generatedQuestion.questionText;
+      target.correctOptionIndex = generatedQuestion.correctOptionIndex;
+      for (
+        var optionIndex = 0;
+        optionIndex < generatedQuestion.options.length &&
+            optionIndex < target.optionControllers.length;
+        optionIndex++
+      ) {
+        target.optionControllers[optionIndex].text =
+            generatedQuestion.options[optionIndex];
+      }
+    }
   }
 
   List<_SectionChoice> _sectionChoicesFor(TeacherProvider prov) {
@@ -504,16 +884,10 @@ class _BooksWebBodyState extends State<BooksWebBody> {
           const SizedBox(height: 6),
           TextFormField(
             controller: draft.questionController,
-            style: const TextStyle(color: Colors.black, fontSize: 14),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: _glassInputDecoration(
+              'Quiz Question ${questionIndex + 1}',
               hintText: 'Enter the quiz question...',
-              hintStyle: const TextStyle(color: Colors.black38),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
@@ -534,10 +908,9 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                   padding: EdgeInsets.only(right: optionIndex == 3 ? 0 : 10),
                   child: TextFormField(
                     controller: draft.optionControllers[optionIndex],
-                    style: const TextStyle(color: Colors.black, fontSize: 13),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    decoration: _glassInputDecoration(
+                      'Option ${optionIndex + 1}',
                       prefixIcon: IconButton(
                         onPressed: () {
                           setDialogState(() {
@@ -552,11 +925,6 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                         ),
                       ),
                       hintText: 'Option ${optionIndex + 1}',
-                      hintStyle: const TextStyle(color: Colors.black38),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 14,
@@ -931,5 +1299,13 @@ class _QuestionDraftControllers {
       options: optionControllers.map((controller) => controller.text).toList(),
       correctOptionIndex: correctOptionIndex,
     );
+  }
+
+  bool get hasContent {
+    return questionController.text.trim().isNotEmpty ||
+        optionControllers.any(
+          (controller) => controller.text.trim().isNotEmpty,
+        ) ||
+        correctOptionIndex != 0;
   }
 }

@@ -80,6 +80,7 @@ class ReadingSubmissionReview {
   final double? readingAccuracy;
   final int quizScore;
   final int quizTotal;
+  final SuggestedReadingRemarks? suggestedRemarks;
 
   const ReadingSubmissionReview({
     required this.id,
@@ -95,6 +96,7 @@ class ReadingSubmissionReview {
     required this.readingAccuracy,
     required this.quizScore,
     required this.quizTotal,
+    this.suggestedRemarks,
   });
 }
 
@@ -103,6 +105,48 @@ class TranscriptWordDiff {
   final String status;
 
   const TranscriptWordDiff({required this.word, required this.status});
+}
+
+class SuggestedReadingRemarks {
+  final int version;
+  final String source;
+  final ReadingRemarkSuggestion omission;
+  final ReadingRemarkSuggestion repetition;
+  final ReadingRemarkSuggestion selfCorrection;
+  final ReadingRemarkSuggestion mispronunciation;
+
+  const SuggestedReadingRemarks({
+    this.version = 1,
+    this.source = 'deterministic_alignment',
+    required this.omission,
+    required this.repetition,
+    required this.selfCorrection,
+    required this.mispronunciation,
+  });
+
+  bool get hasSuggestions =>
+      omission.count > 0 ||
+      repetition.count > 0 ||
+      selfCorrection.count > 0 ||
+      mispronunciation.count > 0;
+}
+
+class ReadingRemarkSuggestion {
+  final String label;
+  final int count;
+  final List<int> transcriptIndexes;
+  final List<int> expectedIndexes;
+  final List<String> words;
+  final String confidence;
+
+  const ReadingRemarkSuggestion({
+    required this.label,
+    required this.count,
+    required this.transcriptIndexes,
+    required this.expectedIndexes,
+    required this.words,
+    required this.confidence,
+  });
 }
 
 class EvaluationMetrics {
@@ -163,4 +207,79 @@ class BookQuestionInput {
     required this.options,
     required this.correctOptionIndex,
   });
+}
+
+class GenerateBookRequest {
+  final String prompt;
+  final String gradeLevel;
+  final String sectionId;
+  final int quizCount;
+  final String passageLength;
+
+  const GenerateBookRequest({
+    required this.prompt,
+    required this.gradeLevel,
+    required this.sectionId,
+    required this.quizCount,
+    required this.passageLength,
+  });
+}
+
+class GeneratedBookDraft {
+  final String title;
+  final String passageText;
+  final List<BookQuestionInput> questions;
+
+  const GeneratedBookDraft({
+    required this.title,
+    required this.passageText,
+    required this.questions,
+  });
+
+  factory GeneratedBookDraft.fromJson(Map<String, dynamic> json) {
+    final title = (json['title'] as String? ?? '').trim();
+    final passageText = (json['passageText'] as String? ?? '').trim();
+    final rawQuestions = json['questions'];
+    if (title.isEmpty || passageText.isEmpty || rawQuestions is! List) {
+      throw const FormatException('Generated book content is incomplete.');
+    }
+
+    final questions = rawQuestions.map<BookQuestionInput>((rawQuestion) {
+      if (rawQuestion is! Map) {
+        throw const FormatException('Generated quiz question is malformed.');
+      }
+      final question = Map<String, dynamic>.from(rawQuestion);
+      final questionText = (question['questionText'] as String? ?? '').trim();
+      final rawOptions = question['options'];
+      final correctOptionIndex =
+          (question['correctOptionIndex'] as num?)?.toInt() ?? -1;
+      if (questionText.isEmpty || rawOptions is! List) {
+        throw const FormatException('Generated quiz question is incomplete.');
+      }
+      final options = rawOptions
+          .map((option) => option.toString().trim())
+          .where((option) => option.isNotEmpty)
+          .toList();
+      if (options.length < 2 ||
+          correctOptionIndex < 0 ||
+          correctOptionIndex >= options.length) {
+        throw const FormatException('Generated quiz options are invalid.');
+      }
+      return BookQuestionInput(
+        questionText: questionText,
+        options: options,
+        correctOptionIndex: correctOptionIndex,
+      );
+    }).toList();
+
+    if (questions.isEmpty || questions.length > 3) {
+      throw const FormatException('Generated quiz count is invalid.');
+    }
+
+    return GeneratedBookDraft(
+      title: title,
+      passageText: passageText,
+      questions: questions,
+    );
+  }
 }

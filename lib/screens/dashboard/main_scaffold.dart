@@ -51,7 +51,15 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       ),
       child: Column(
         children: [
-          Expanded(child: _getMobileTabBody(_currentTab)),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () => _refreshTeacherData(context),
+              child: SafeArea(
+                bottom: false,
+                child: _getMobileTabBody(_currentTab),
+              ),
+            ),
+          ),
           Container(
             decoration: BoxDecoration(
               color: const Color(0xFF1E293B).withValues(alpha: 0.85),
@@ -281,6 +289,13 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshTeacherData(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final error = await context.read<TeacherProvider>().refreshData();
+    if (!context.mounted || error == null) return;
+    messenger.showSnackBar(SnackBar(content: Text(error)));
   }
 
   void _navigateToStudentDetail(dynamic student) {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
+import '../../../widgets/app_dialogs.dart';
 
 class EvaluationDetailMobileBody extends StatefulWidget {
   final VoidCallback onBack;
@@ -16,6 +17,7 @@ class EvaluationDetailMobileBody extends StatefulWidget {
 class _EvaluationDetailMobileBodyState
     extends State<EvaluationDetailMobileBody> {
   final TextEditingController _feedbackController = TextEditingController();
+  String _initialFeedback = '';
 
   @override
   void initState() {
@@ -26,7 +28,31 @@ class _EvaluationDetailMobileBodyState
       _feedbackController.text = prov
           .getEvaluationForStudent(student.id)
           .feedback;
+      _initialFeedback = _feedbackController.text;
     }
+  }
+
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    super.dispose();
+  }
+
+  bool get _isDirty =>
+      _feedbackController.text.trim() != _initialFeedback.trim();
+
+  Future<void> _handleBack() async {
+    if (_isDirty) {
+      final shouldLeave = await showAppConfirmDialog(
+        context,
+        title: 'Discard Feedback Changes?',
+        message: 'Your edited feedback has not been sent to the student.',
+        confirmLabel: 'Discard',
+        isDanger: true,
+      );
+      if (!shouldLeave || !mounted) return;
+    }
+    widget.onBack();
   }
 
   @override
@@ -53,201 +79,207 @@ class _EvaluationDetailMobileBodyState
         .join()
         .toUpperCase();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) await _handleBack();
+      },
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: widget.onBack,
-        ),
-        title: Text(
-          'Evaluation Detail',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            fontSize: 20,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: _handleBack,
+          ),
+          title: Text(
+            'Evaluation Detail',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              fontSize: 20,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 32.0),
-          child: Column(
-            children: [
-              // Student Card Info
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 24,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1.5,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 32.0),
+            child: Column(
+              children: [
+                // Student Card Info
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 20,
                   ),
-                ),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 38,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        initials,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 38,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          initials,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFF0371C2),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        student.name,
                         style: GoogleFonts.outfit(
-                          color: const Color(0xFF0371C2),
                           fontWeight: FontWeight.w900,
-                          fontSize: 22,
+                          fontSize: 20,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      student.name,
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${student.grade} • ${student.section}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Action buttons (Clean glass outline buttons)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.15),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.2),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(
-                        'REVIEW VIDEO',
+                      const SizedBox(height: 4),
+                      Text(
+                        '${student.grade} • ${student.section}',
                         style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
                           fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF60A5FA),
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(
-                        'GENERATE REPORT',
-                        style: GoogleFonts.outfit(
+                          color: Colors.white70,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Metrics Grid
-              _buildMetricsGrid(eval),
-              const SizedBox(height: 24),
-
-              // Color-coded Story analysis box
-              _buildMockupStoryCard(),
-              const SizedBox(height: 24),
-
-              // Feedback Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1.5,
+                    ],
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 20),
+
+                // Action buttons (Clean glass outline buttons)
+                Row(
                   children: [
-                    Text(
-                      'FEEDBACK',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        fontSize: 14,
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'REVIEW VIDEO',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        controller: _feedbackController,
-                        maxLines: 4,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 13,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF60A5FA),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
-                          hintText: 'Enter feedback message...',
-                          hintStyle: TextStyle(color: Colors.black38),
+                        child: Text(
+                          'GENERATE REPORT',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
-                        onChanged: (val) {
-                          eval.feedback = val;
-                          prov.updateEvaluation(
-                            student.id,
-                            eval.omissions,
-                            eval.repetitions,
-                            eval.selfCorrections,
-                            eval.mispronunciations,
-                            val,
-                          );
-                        },
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                // Metrics Grid
+                _buildMetricsGrid(eval),
+                const SizedBox(height: 24),
+
+                // Color-coded Story analysis box
+                _buildMockupStoryCard(),
+                const SizedBox(height: 24),
+
+                // Feedback Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'FEEDBACK',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextField(
+                          controller: _feedbackController,
+                          maxLines: 4,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 13,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.all(16),
+                            hintText: 'Enter feedback message...',
+                            hintStyle: TextStyle(color: Colors.black38),
+                          ),
+                          onChanged: (val) {
+                            eval.feedback = val;
+                            prov.updateEvaluation(
+                              student.id,
+                              eval.omissions,
+                              eval.repetitions,
+                              eval.selfCorrections,
+                              eval.mispronunciations,
+                              val,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

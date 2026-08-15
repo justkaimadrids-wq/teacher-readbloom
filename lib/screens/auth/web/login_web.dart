@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
+import '../../../widgets/app_dialogs.dart';
 import '../../../widgets/forgot_password_dialog.dart';
 import '../../../widgets/loading_dialog.dart';
 
@@ -106,21 +107,13 @@ class LoginWebBody extends StatelessWidget {
                       message: 'Signing in...',
                     );
                     if (result.success || !context.mounted) return;
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Cannot login'),
-                        content: Text(
+                    showAppMessageDialog(
+                      context,
+                      title: 'Cannot login',
+                      message:
                           result.message ??
-                              'Credentials not found or incorrect.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
+                          'Credentials not found or incorrect.',
+                      isDanger: true,
                     );
                   },
                   child: Container(
