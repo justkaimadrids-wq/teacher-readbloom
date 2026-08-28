@@ -451,7 +451,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
     final rows = await client
         .from('reading_submissions')
         .select(
-          'id,student_id,book_title_snapshot,passage_text_snapshot,video_path,status,submitted_at,created_at,'
+          'id,student_id,book_title_snapshot,passage_text_snapshot,video_path,duration_seconds,status,submitted_at,created_at,'
           'transcript_results(raw_transcript,alignment_json,overall_accuracy,suggested_remarks_json,suggested_omission_count,suggested_repetition_count,suggested_self_correction_count,suggested_mispronunciation_count),'
           'quiz_answers(is_correct)',
         )
@@ -484,6 +484,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
             : await client.storage
                   .from('reading-videos')
                   .createSignedUrl(videoPath, 3600),
+        durationSeconds: (row['duration_seconds'] as num?)?.toInt() ?? 0,
         rawTranscript: transcript['raw_transcript'] as String? ?? '',
         alignment: _alignmentFromJson(transcript['alignment_json']),
         readingAccuracy: _toDouble(transcript['overall_accuracy']),
