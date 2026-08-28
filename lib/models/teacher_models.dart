@@ -75,6 +75,7 @@ class ReadingSubmissionReview {
   final String submittedAtLabel;
   final String videoPath;
   final String videoUrl;
+  final int durationSeconds;
   final String rawTranscript;
   final List<TranscriptWordDiff> alignment;
   final double? readingAccuracy;
@@ -91,6 +92,7 @@ class ReadingSubmissionReview {
     required this.submittedAtLabel,
     required this.videoPath,
     required this.videoUrl,
+    this.durationSeconds = 0,
     required this.rawTranscript,
     required this.alignment,
     required this.readingAccuracy,

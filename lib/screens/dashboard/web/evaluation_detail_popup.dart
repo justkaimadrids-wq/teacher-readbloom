@@ -271,6 +271,7 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
                     builder: (context) => VideoReviewDialog(
                       videoUrl: widget.submission!.videoUrl,
                       title: widget.submission!.bookTitle,
+                      durationSeconds: widget.submission!.durationSeconds,
                     ),
                   );
                 }
