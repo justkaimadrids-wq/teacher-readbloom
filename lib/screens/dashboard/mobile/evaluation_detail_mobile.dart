@@ -104,6 +104,7 @@ class _EvaluationDetailMobileBodyState
         ),
         body: SafeArea(
           child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 32.0),
             child: Column(
               children: [

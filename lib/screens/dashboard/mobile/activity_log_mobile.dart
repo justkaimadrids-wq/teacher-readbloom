@@ -67,6 +67,7 @@ class _ActivityLogMobileBodyState extends State<ActivityLogMobileBody> {
           // Log Container Panel
           Expanded(
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(
                 left: 20.0,
                 right: 20.0,

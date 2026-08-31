@@ -1029,13 +1029,23 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
           // List
           Expanded(
             child: sortedBooks.isEmpty
-                ? Center(
-                    child: Text(
-                      'No books available.',
-                      style: GoogleFonts.outfit(color: Colors.white70),
-                    ),
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20.0),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.sizeOf(context).height * 0.45,
+                        child: Center(
+                          child: Text(
+                            'No books available.',
+                            style: GoogleFonts.outfit(color: Colors.white70),
+                          ),
+                        ),
+                      ),
+                    ],
                   )
                 : ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(20.0),
                     itemCount: sortedBooks.length,
                     separatorBuilder: (context, index) =>
