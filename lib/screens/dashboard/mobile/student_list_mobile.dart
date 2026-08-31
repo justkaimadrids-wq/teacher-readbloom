@@ -353,6 +353,7 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
         // List of students
         Expanded(
           child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20.0),
             itemCount: filteredStudents.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),

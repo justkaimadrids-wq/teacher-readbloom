@@ -20,6 +20,7 @@ class ProfileMobileBody extends StatelessWidget {
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Container(
             width: double.infinity,
