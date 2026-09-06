@@ -56,9 +56,48 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
   @override
   void initState() {
     super.initState();
-    _feedbackController.text = widget.eval.feedback;
-    _applySuggestedRemarks();
+    _loadExistingFeedbackOrSuggestions();
     _initialFeedbackJson = _composeFeedback();
+  }
+
+  void _loadExistingFeedbackOrSuggestions() {
+    final feedbackText = widget.submission?.feedbackText?.trim() ??
+        widget.eval.feedback.trim();
+    if (feedbackText.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(feedbackText);
+        if (decoded is Map<String, dynamic> &&
+            decoded['format'] == 'readbloom_teacher_review_v1') {
+          _feedbackController.text = decoded['feedback']?.toString() ?? '';
+          final rawRemarks = decoded['remarks'];
+          if (rawRemarks is Map) {
+            final wordCount = _transcriptWords.length;
+            for (final type in _RemarkType.values) {
+              final remarkData = rawRemarks[type.name];
+              if (remarkData is Map) {
+                final count = (remarkData['count'] as num?)?.toInt() ?? 0;
+                final indexes =
+                    (remarkData['indexes'] as List<dynamic>? ?? const [])
+                        .map((idx) => (idx as num?)?.toInt())
+                        .whereType<int>()
+                        .where((idx) => idx >= 0 && idx < wordCount)
+                        .toSet();
+                _remarkIndexes[type]!.addAll(indexes);
+                _remarkCounts[type] =
+                    count > indexes.length ? count : indexes.length;
+              }
+            }
+            return;
+          }
+        } else {
+          _feedbackController.text = feedbackText;
+        }
+      } catch (_) {
+        _feedbackController.text = feedbackText;
+      }
+    }
+
+    _applySuggestedRemarks();
   }
 
   @override

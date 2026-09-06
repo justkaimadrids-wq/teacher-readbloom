@@ -694,12 +694,32 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
 
         // Badges list
         Expanded(
-          child: ListView.separated(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20.0),
-            itemCount: filteredStudents.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
+          child: filteredStudents.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(20.0),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.4,
+                      child: Center(
+                        child: Text(
+                          'No students found.',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(20.0),
+                  itemCount: filteredStudents.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
               final student = filteredStudents[index];
               final initials = student.name
                   .split(' ')

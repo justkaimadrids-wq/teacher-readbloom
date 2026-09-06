@@ -453,7 +453,8 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         .select(
           'id,student_id,book_title_snapshot,passage_text_snapshot,video_path,duration_seconds,status,submitted_at,created_at,'
           'transcript_results(raw_transcript,alignment_json,overall_accuracy,suggested_remarks_json,suggested_omission_count,suggested_repetition_count,suggested_self_correction_count,suggested_mispronunciation_count),'
-          'quiz_answers(is_correct)',
+          'quiz_answers(is_correct),'
+          'teacher_feedback(feedback_text,created_at)',
         )
         .inFilter('status', ['submitted', 'processed'])
         .order('created_at', ascending: false);
@@ -470,6 +471,21 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         final answerRow = answer as Map<String, dynamic>;
         return answerRow['is_correct'] == true;
       }).length;
+      final feedbackRows = _embeddedList(row['teacher_feedback']);
+      String? latestFeedbackText;
+      if (feedbackRows.isNotEmpty) {
+        final sortedFeedback = List.from(feedbackRows);
+        sortedFeedback.sort((a, b) {
+          final aCreated =
+              (a as Map<String, dynamic>)['created_at']?.toString() ?? '';
+          final bCreated =
+              (b as Map<String, dynamic>)['created_at']?.toString() ?? '';
+          return bCreated.compareTo(aCreated);
+        });
+        latestFeedbackText =
+            (sortedFeedback.first as Map<String, dynamic>)['feedback_text']
+                ?.toString();
+      }
 
       final review = ReadingSubmissionReview(
         id: row['id'] as String? ?? '',
@@ -501,6 +517,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
           mispronunciationCount:
               (transcript['suggested_mispronunciation_count'] as num?)?.toInt(),
         ),
+        feedbackText: latestFeedbackText,
       );
       result.putIfAbsent(studentId, () => []).add(review);
     }

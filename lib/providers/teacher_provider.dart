@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -99,15 +100,76 @@ class TeacherProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  EvaluationMetrics _extractEvaluationFromSubmission(
+    ReadingSubmissionReview submission,
+  ) {
+    int omissions = submission.suggestedRemarks?.omission.count ?? 0;
+    int repetitions = submission.suggestedRemarks?.repetition.count ?? 0;
+    int selfCorrections = submission.suggestedRemarks?.selfCorrection.count ?? 0;
+    int mispronunciations =
+        submission.suggestedRemarks?.mispronunciation.count ?? 0;
+    String feedback = '';
+
+    final feedbackText = submission.feedbackText?.trim();
+    if (feedbackText != null && feedbackText.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(feedbackText);
+        if (decoded is Map<String, dynamic> &&
+            decoded['format'] == 'readbloom_teacher_review_v1') {
+          feedback = decoded['feedback']?.toString() ?? '';
+          final remarks = decoded['remarks'];
+          if (remarks is Map) {
+            final oMap = remarks['omission'];
+            if (oMap is Map && oMap['count'] != null) {
+              omissions = (oMap['count'] as num).toInt();
+            }
+            final rMap = remarks['repetition'];
+            if (rMap is Map && rMap['count'] != null) {
+              repetitions = (rMap['count'] as num).toInt();
+            }
+            final sMap = remarks['selfCorrection'];
+            if (sMap is Map && sMap['count'] != null) {
+              selfCorrections = (sMap['count'] as num).toInt();
+            }
+            final mMap = remarks['mispronunciation'];
+            if (mMap is Map && mMap['count'] != null) {
+              mispronunciations = (mMap['count'] as num).toInt();
+            }
+          }
+        } else {
+          feedback = feedbackText;
+        }
+      } catch (_) {
+        feedback = feedbackText;
+      }
+    }
+
+    return EvaluationMetrics(
+      omissions: omissions,
+      repetitions: repetitions,
+      selfCorrections: selfCorrections,
+      mispronunciations: mispronunciations,
+      feedback: feedback,
+    );
+  }
+
   EvaluationMetrics getEvaluationForStudent(String studentId) {
-    return _evaluations[studentId] ??
-        EvaluationMetrics(
-          omissions: 0,
-          repetitions: 0,
-          selfCorrections: 0,
-          mispronunciations: 0,
-          feedback: '',
-        );
+    if (_evaluations.containsKey(studentId)) {
+      return _evaluations[studentId]!;
+    }
+    final reviews = _readingReviewsByStudent[studentId];
+    if (reviews != null && reviews.isNotEmpty) {
+      final eval = _extractEvaluationFromSubmission(reviews.first);
+      _evaluations[studentId] = eval;
+      return eval;
+    }
+    return EvaluationMetrics(
+      omissions: 0,
+      repetitions: 0,
+      selfCorrections: 0,
+      mispronunciations: 0,
+      feedback: '',
+    );
   }
 
   void updateEvaluation(
@@ -214,7 +276,24 @@ class TeacherProvider extends ChangeNotifier {
         studentId: studentId,
         feedback: cleanedFeedback,
       );
-      updateEvaluation(studentId, 0, 0, 0, 0, cleanedFeedback);
+
+      final updatedSubmission =
+          submission.copyWith(feedbackText: cleanedFeedback);
+      final currentList = _readingReviewsByStudent[studentId];
+      if (currentList != null) {
+        final index = currentList.indexWhere((s) => s.id == submission.id);
+        if (index != -1) {
+          final updatedList = List<ReadingSubmissionReview>.from(currentList);
+          updatedList[index] = updatedSubmission;
+          _readingReviewsByStudent =
+              Map<String, List<ReadingSubmissionReview>>.from(
+                _readingReviewsByStudent,
+              )..[studentId] = updatedList;
+        }
+      }
+
+      final eval = _extractEvaluationFromSubmission(updatedSubmission);
+      _evaluations[studentId] = eval;
       return null;
     } catch (_) {
       return 'Unable to send feedback right now.';
@@ -510,6 +589,13 @@ class TeacherProvider extends ChangeNotifier {
       _books = await _teacherRepository.getCurrentBooks();
       _readingReviewsByStudent = await _teacherRepository
           .getCurrentReadingReviews();
+      _evaluations = {};
+      for (final entry in _readingReviewsByStudent.entries) {
+        if (entry.value.isNotEmpty) {
+          _evaluations[entry.key] =
+              _extractEvaluationFromSubmission(entry.value.first);
+        }
+      }
       _students = await _teacherRepository.getCurrentStudents();
       _classes = await _teacherRepository.getCurrentClasses();
       _activities = await _teacherRepository.getCurrentActivities();
