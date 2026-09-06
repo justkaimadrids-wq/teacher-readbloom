@@ -367,53 +367,68 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
   }
 
   Widget _buildRemarkSelector(bool isMobile) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: _RemarkType.values.map((type) {
-        final selected = _activeType == type;
-        final count = _remarkCounts[type] ?? _remarkIndexes[type]!.length;
-        return InkWell(
-          onTap: () {
-            setState(() {
-              _activeType = selected ? null : type;
-            });
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: isMobile ? null : 170,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: selected ? type.color : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: type.color, width: 2),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  type.label.toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    color: selected ? Colors.white : type.color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
+    return Row(
+      children: [
+        for (int i = 0; i < _RemarkType.values.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                final type = _RemarkType.values[i];
+                final selected = _activeType == type;
+                final count =
+                    _remarkCounts[type] ?? _remarkIndexes[type]!.length;
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _activeType = selected ? null : type;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected ? type.color : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: type.color, width: 2),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            type.label.toUpperCase(),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            style: GoogleFonts.outfit(
+                              color: selected ? Colors.white : type.color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$count',
+                          style: GoogleFonts.outfit(
+                            color: selected ? Colors.white : Colors.black,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$count',
-                  style: GoogleFonts.outfit(
-                    color: selected ? Colors.white : Colors.black,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
-        );
-      }).toList(),
+        ],
+      ],
     );
   }
 

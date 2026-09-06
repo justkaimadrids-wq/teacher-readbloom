@@ -103,6 +103,9 @@ class ReadingSubmissionReview {
     this.feedbackText,
   });
 
+  bool get isPendingReview =>
+      feedbackText == null || feedbackText!.trim().isEmpty;
+
   ReadingSubmissionReview copyWith({
     String? id,
     String? studentId,

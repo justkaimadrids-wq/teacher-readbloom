@@ -312,33 +312,38 @@ class _EvaluationDetailMobileBodyState
   }
 
   Widget _buildMetricsGrid(EvaluationMetrics eval) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 1.6,
+    return Row(
       children: [
-        _buildPopupErrorTile(
-          'OMISSION',
-          eval.omissions,
-          Colors.red,
+        Expanded(
+          child: _buildPopupErrorTile(
+            'OMISSION',
+            eval.omissions,
+            Colors.red,
+          ),
         ),
-        _buildPopupErrorTile(
-          'REPETITION',
-          eval.repetitions,
-          const Color(0xFFF472B6),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildPopupErrorTile(
+            'REPETITION',
+            eval.repetitions,
+            const Color(0xFFF472B6),
+          ),
         ),
-        _buildPopupErrorTile(
-          'SELF CORRECTION',
-          eval.selfCorrections,
-          const Color(0xFF10B981),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildPopupErrorTile(
+            'SELF CORRECTION',
+            eval.selfCorrections,
+            const Color(0xFF10B981),
+          ),
         ),
-        _buildPopupErrorTile(
-          'MISPRONUNCIATION',
-          eval.mispronunciations,
-          const Color(0xFFEAB308),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildPopupErrorTile(
+            'MISPRONUNCIATION',
+            eval.mispronunciations,
+            const Color(0xFFEAB308),
+          ),
         ),
       ],
     );
@@ -346,29 +351,33 @@ class _EvaluationDetailMobileBodyState
 
   Widget _buildPopupErrorTile(String title, int count, Color textColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.black, width: 1.5),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: textColor,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: GoogleFonts.outfit(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             '$count',
             style: GoogleFonts.outfit(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),

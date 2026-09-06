@@ -41,6 +41,9 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
 
   // --- MOBILE LAYOUT ---
   Widget _buildMobileScaffold(BuildContext context) {
+    final prov = context.watch<TeacherProvider>();
+    final newCount = prov.newReadingSubmissionsCount;
+
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
@@ -78,28 +81,40 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                 fontSize: 11,
               ),
               unselectedLabelStyle: GoogleFonts.outfit(fontSize: 11),
-              items: const [
-                BottomNavigationBarItem(
+              items: [
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.dashboard_outlined),
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.list_alt_outlined),
+                  icon: Badge(
+                    isLabelVisible: newCount > 0,
+                    backgroundColor: const Color(0xFFEF4444),
+                    textColor: Colors.white,
+                    label: Text(
+                      newCount > 99 ? '99+' : '$newCount',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Icon(Icons.list_alt_outlined),
+                  ),
                   label: 'Students',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.menu_book_outlined),
                   label: 'Books',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.history),
                   label: 'Activity',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.workspace_premium),
                   label: 'Badges',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline),
                   label: 'Profile',
                 ),
@@ -171,6 +186,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                       1,
                       Icons.list_alt_outlined,
                       'Students Progress',
+                      badgeCount: prov.newReadingSubmissionsCount,
                     ),
                     _buildSidebarItem(2, Icons.menu_book_outlined, 'Books'),
                     _buildSidebarItem(3, Icons.history, 'Activity Log'),
@@ -247,7 +263,12 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
     );
   }
 
-  Widget _buildSidebarItem(int index, IconData icon, String label) {
+  Widget _buildSidebarItem(
+    int index,
+    IconData icon,
+    String label, {
+    int badgeCount = 0,
+  }) {
     final isActive = _currentTab == index;
     return InkWell(
       onTap: () => setState(() => _currentTab = index),
@@ -275,16 +296,43 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                   : Colors.white.withValues(alpha: 0.85),
             ),
             const SizedBox(width: 14),
-            Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: isActive
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.85),
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: isActive
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.85),
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
+            if (badgeCount > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.5),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  badgeCount > 99 ? '99+' : '$badgeCount',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
