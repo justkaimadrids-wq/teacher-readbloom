@@ -513,7 +513,8 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                       child: Container(
-                        width: 320,
+                        width: (MediaQuery.of(context).size.width * 0.9)
+                            .clamp(340.0, 420.0),
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.45),
@@ -725,11 +726,28 @@ class _BooksMobileBodyState extends State<BooksMobileBody> {
                                                 ),
                                               );
                                             },
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 12,
+                                        ),
+                                      ),
                                       icon: const Icon(
                                         Icons.auto_awesome,
-                                        size: 18,
+                                        size: 16,
                                       ),
-                                      label: const Text('Generate'),
+                                      label: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          'Generate',
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],

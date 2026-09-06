@@ -164,6 +164,28 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                                         ],
                                       ),
                                     ),
+                                    if (submission.isPendingReview) ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEF4444),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'NEW',
+                                          style: GoogleFonts.outfit(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
                                     const Icon(
                                       Icons.chevron_right_outlined,
                                       color: Colors.white70,
@@ -451,6 +473,41 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                           ),
                         ),
 
+                        if (prov.getNewReadingSubmissionsCountForStudent(student.id) > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 22,
+                              minHeight: 22,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(11),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.45),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              prov.getNewReadingSubmissionsCountForStudent(student.id) > 99
+                                  ? '99+'
+                                  : '${prov.getNewReadingSubmissionsCountForStudent(student.id)}',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
                         const Icon(
                           Icons.chevron_right_outlined,
                           color: Colors.white70,

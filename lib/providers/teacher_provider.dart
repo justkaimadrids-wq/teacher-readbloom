@@ -36,6 +36,8 @@ class TeacherProvider extends ChangeNotifier {
   String? _teacherDataError;
   StudentProgress? _selectedStudentForEvaluation;
   StreamSubscription<AuthState>? _authStateSubscription;
+  RealtimeChannel? _submissionsChannel;
+  Timer? _periodicRefreshTimer;
 
   TeacherProvider({
     TeacherRepository? teacherRepository,
@@ -93,6 +95,24 @@ class TeacherProvider extends ChangeNotifier {
 
   List<ReadingSubmissionReview> getReadingReviewsForStudent(String studentId) {
     return List.unmodifiable(_readingReviewsByStudent[studentId] ?? const []);
+  }
+
+  int get newReadingSubmissionsCount {
+    int count = 0;
+    for (final reviews in _readingReviewsByStudent.values) {
+      for (final review in reviews) {
+        if (review.isPendingReview) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  int getNewReadingSubmissionsCountForStudent(String studentId) {
+    final reviews = _readingReviewsByStudent[studentId];
+    if (reviews == null || reviews.isEmpty) return 0;
+    return reviews.where((r) => r.isPendingReview).length;
   }
 
   void selectStudentForEvaluation(StudentProgress student) {
@@ -499,6 +519,10 @@ class TeacherProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _submissionsChannel?.unsubscribe();
+    _submissionsChannel = null;
+    _periodicRefreshTimer?.cancel();
+    _periodicRefreshTimer = null;
     await _authService.signOut();
     _isLoggedIn = false;
     _isPasswordRecovery = false;
@@ -605,6 +629,7 @@ class TeacherProvider extends ChangeNotifier {
           )) {
         _selectedStudentForEvaluation = null;
       }
+      _subscribeToSubmissionsRealtime();
     } catch (error) {
       _teacherDataError =
           'Unable to load teacher dashboard data right now. ${error.toString()}';
@@ -664,9 +689,53 @@ class TeacherProvider extends ChangeNotifier {
         uri.toString().contains('type=recovery');
   }
 
+  Future<void> refreshReadingReviews() async {
+    try {
+      _readingReviewsByStudent =
+          await _teacherRepository.getCurrentReadingReviews();
+      _evaluations = {};
+      for (final entry in _readingReviewsByStudent.entries) {
+        if (entry.value.isNotEmpty) {
+          _evaluations[entry.key] =
+              _extractEvaluationFromSubmission(entry.value.first);
+        }
+      }
+      _activities = await _teacherRepository.getCurrentActivities();
+      notifyListeners();
+    } catch (_) {
+      // Best-effort background refresh
+    }
+  }
+
+  void _subscribeToSubmissionsRealtime() {
+    final client = SupabaseService.client;
+    if (client == null) return;
+    _submissionsChannel?.unsubscribe();
+    _submissionsChannel = client
+        .channel('public:reading_submissions_teacher')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'reading_submissions',
+          callback: (_) {
+            unawaited(refreshReadingReviews());
+          },
+        )
+        .subscribe();
+
+    _periodicRefreshTimer?.cancel();
+    _periodicRefreshTimer = Timer.periodic(const Duration(seconds: 25), (_) {
+      if (_isLoggedIn && !_isTeacherDataLoading) {
+        unawaited(refreshReadingReviews());
+      }
+    });
+  }
+
   @override
   void dispose() {
     _authStateSubscription?.cancel();
+    _submissionsChannel?.unsubscribe();
+    _periodicRefreshTimer?.cancel();
     super.dispose();
   }
 }

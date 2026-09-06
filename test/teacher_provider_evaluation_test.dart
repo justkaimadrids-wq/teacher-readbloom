@@ -2,8 +2,122 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:teacher_readbloom/models/teacher_models.dart';
 import 'package:teacher_readbloom/providers/teacher_provider.dart';
+import 'package:teacher_readbloom/repositories/teacher_repository.dart';
+
+class MockReviewsTeacherRepository extends MockTeacherRepository {
+  Map<String, List<ReadingSubmissionReview>> reviews;
+  MockReviewsTeacherRepository({required this.reviews});
+
+  @override
+  Future<Map<String, List<ReadingSubmissionReview>>> getCurrentReadingReviews() async => reviews;
+}
 
 void main() {
+  group('TeacherProvider Pending Submissions Notification Badge Tests', () {
+    test('initial pending count is 0', () {
+      final provider = TeacherProvider();
+      expect(provider.newReadingSubmissionsCount, 0);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-1'), 0);
+    });
+
+    test('counts unreviewed submissions and updates when feedback is sent', () async {
+      const sub1 = ReadingSubmissionReview(
+        id: 'sub-1',
+        studentId: 'student-1',
+        bookTitle: 'Book 1',
+        passageText: 'Passage 1',
+        status: 'completed',
+        submittedAtLabel: '10m ago',
+        videoPath: '',
+        videoUrl: '',
+        rawTranscript: 'hello',
+        readingAccuracy: 90,
+        quizScore: 5,
+        quizTotal: 5,
+        alignment: [],
+        feedbackText: null, // Pending review
+      );
+
+      const sub2 = ReadingSubmissionReview(
+        id: 'sub-2',
+        studentId: 'student-1',
+        bookTitle: 'Book 2',
+        passageText: 'Passage 2',
+        status: 'completed',
+        submittedAtLabel: '20m ago',
+        videoPath: '',
+        videoUrl: '',
+        rawTranscript: 'world',
+        readingAccuracy: 92,
+        quizScore: 4,
+        quizTotal: 5,
+        alignment: [],
+        feedbackText: '   ', // Whitespace only, treated as pending review
+      );
+
+      const sub3 = ReadingSubmissionReview(
+        id: 'sub-3',
+        studentId: 'student-2',
+        bookTitle: 'Book 3',
+        passageText: 'Passage 3',
+        status: 'completed',
+        submittedAtLabel: '1h ago',
+        videoPath: '',
+        videoUrl: '',
+        rawTranscript: 'reading',
+        readingAccuracy: 95,
+        quizScore: 5,
+        quizTotal: 5,
+        alignment: [],
+        feedbackText: 'Great work!', // Already reviewed
+      );
+
+      const sub4 = ReadingSubmissionReview(
+        id: 'sub-4',
+        studentId: 'student-2',
+        bookTitle: 'Book 4',
+        passageText: 'Passage 4',
+        status: 'completed',
+        submittedAtLabel: '5m ago',
+        videoPath: '',
+        videoUrl: '',
+        rawTranscript: 'read bloom',
+        readingAccuracy: 88,
+        quizScore: 3,
+        quizTotal: 5,
+        alignment: [],
+        feedbackText: null, // Pending review
+      );
+
+      final repo = MockReviewsTeacherRepository(
+        reviews: {
+          'student-1': [sub1, sub2],
+          'student-2': [sub3, sub4],
+        },
+      );
+
+      final provider = TeacherProvider(teacherRepository: repo);
+      await provider.refreshReadingReviews();
+
+      // Total pending: sub1 (student-1), sub2 (student-1), sub4 (student-2) -> 3 total
+      expect(provider.newReadingSubmissionsCount, 3);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-1'), 2);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-2'), 1);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-3'), 0);
+
+      // Now send feedback for sub1
+      await provider.sendFeedbackForSubmission(
+        submission: sub1,
+        studentId: 'student-1',
+        feedback: 'Good job on the passage!',
+      );
+
+      // Total pending should now be 2, and student-1 pending should be 1
+      expect(provider.newReadingSubmissionsCount, 2);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-1'), 1);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-2'), 1);
+    });
+  });
   group('TeacherProvider Evaluation Metrics Tests', () {
     test('getEvaluationForStudent returns 0s when no submissions exist', () {
       final provider = TeacherProvider();

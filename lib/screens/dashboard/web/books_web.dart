@@ -768,11 +768,28 @@ class _BooksWebBodyState extends State<BooksWebBody> {
                                               ),
                                             );
                                           },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                    ),
                                     icon: const Icon(
                                       Icons.auto_awesome,
-                                      size: 18,
+                                      size: 16,
                                     ),
-                                    label: const Text('Generate'),
+                                    label: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        'Generate',
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),

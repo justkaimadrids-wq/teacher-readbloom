@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../widgets/app_dialogs.dart';
-import '../../../widgets/forgot_password_dialog.dart';
+// import '../../../widgets/forgot_password_dialog.dart';
 import '../../../widgets/loading_dialog.dart';
 
 class LoginWebBody extends StatelessWidget {
@@ -141,19 +141,19 @@ class LoginWebBody extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => showForgotPasswordDialog(
-                    context,
-                    onSubmit: (email) => context
-                        .read<TeacherProvider>()
-                        .sendPasswordResetEmail(email),
-                  ),
-                  child: Text(
-                    'Forgot password?',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                // const SizedBox(height: 16),
+                // TextButton(
+                //   onPressed: () => showForgotPasswordDialog(
+                //     context,
+                //     onSubmit: (email) => context
+                //         .read<TeacherProvider>()
+                //         .sendPasswordResetEmail(email),
+                //   ),
+                //   child: Text(
+                //     'Forgot password?',
+                //     style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                //   ),
+                // ),
               ],
             ),
           ),

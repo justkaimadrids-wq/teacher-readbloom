@@ -402,15 +402,19 @@ class _DetailedProgressWebBodyState extends State<DetailedProgressWebBody> {
       color: Colors.black,
       backgroundColor: Colors.white,
       borderRadius: 18,
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
       child: Column(
         children: [
-          Text(
-            title,
-            style: GoogleFonts.outfit(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: textColor,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              maxLines: 1,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
           ),
           const SizedBox(height: 6),
