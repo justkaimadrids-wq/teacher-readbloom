@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
 import '../../../widgets/app_dialogs.dart';
+import '../web/evaluation_detail_popup.dart';
 
 class EvaluationDetailMobileBody extends StatefulWidget {
   final VoidCallback onBack;
@@ -72,6 +73,8 @@ class _EvaluationDetailMobileBodyState
     }
 
     final eval = prov.getEvaluationForStudent(student.id);
+    final submissions = prov.getReadingReviewsForStudent(student.id);
+    final latestSubmission = submissions.isNotEmpty ? submissions.first : null;
     final initials = student.name
         .split(' ')
         .map((e) => e.isNotEmpty ? e[0] : '')
@@ -165,7 +168,28 @@ class _EvaluationDetailMobileBodyState
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          if (latestSubmission == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'No reading submissions available yet for ${student.name}.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          showDialog(
+                            context: context,
+                            barrierColor: Colors.black.withValues(alpha: 0.45),
+                            builder: (context) => EvaluationDetailPopup(
+                              student: student,
+                              eval: eval,
+                              storyTitle: latestSubmission.bookTitle,
+                              submission: latestSubmission,
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white.withValues(alpha: 0.15),
                           foregroundColor: Colors.white,
@@ -218,7 +242,7 @@ class _EvaluationDetailMobileBodyState
                 const SizedBox(height: 24),
 
                 // Color-coded Story analysis box
-                _buildMockupStoryCard(),
+                _buildStoryCard(latestSubmission),
                 const SizedBox(height: 24),
 
                 // Feedback Card
@@ -298,22 +322,22 @@ class _EvaluationDetailMobileBodyState
       children: [
         _buildPopupErrorTile(
           'OMISSION',
-          eval.omissions > 0 ? eval.omissions : 2,
+          eval.omissions,
           Colors.red,
         ),
         _buildPopupErrorTile(
           'REPETITION',
-          eval.repetitions > 0 ? eval.repetitions : 3,
+          eval.repetitions,
           const Color(0xFFF472B6),
         ),
         _buildPopupErrorTile(
           'SELF CORRECTION',
-          eval.selfCorrections > 0 ? eval.selfCorrections : 4,
+          eval.selfCorrections,
           const Color(0xFF10B981),
         ),
         _buildPopupErrorTile(
           'MISPRONUNCIATION',
-          eval.mispronunciations > 0 ? eval.mispronunciations : 5,
+          eval.mispronunciations,
           const Color(0xFFEAB308),
         ),
       ],
@@ -354,7 +378,47 @@ class _EvaluationDetailMobileBodyState
     );
   }
 
-  Widget _buildMockupStoryCard() {
+  Widget _buildStoryCard(ReadingSubmissionReview? submission) {
+    if (submission == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black, width: 2.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Oral Reading Analysis',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w900,
+                color: Colors.black,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Divider(color: Colors.black.withValues(alpha: 0.12), thickness: 1),
+            const SizedBox(height: 14),
+            Text(
+              'No reading submissions available yet. Once the student submits a reading recording, their speech analysis and remark breakdown will appear here.',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.black54,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final words = submission.alignment.isNotEmpty
+        ? submission.alignment
+        : null;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -366,152 +430,104 @@ class _EvaluationDetailMobileBodyState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Oral Reading Analysis',
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.w900,
-              color: Colors.black,
-              fontSize: 16,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Story: ${submission.bookTitle}',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${submission.submittedAtLabel} • ${submission.readingAccuracy != null ? "${submission.readingAccuracy!.toStringAsFixed(1)}% Accuracy" : "Pending Evaluation"}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Divider(color: Colors.black.withValues(alpha: 0.12), thickness: 1),
           const SizedBox(height: 14),
-          RichText(
-            text: TextSpan(
+          if (words != null && words.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              runSpacing: 8,
+              children: words.map((diff) {
+                Color textColor = Colors.black87;
+                Color bgColor = Colors.transparent;
+                Color borderColor = Colors.transparent;
+
+                final status = diff.status.toLowerCase();
+                if (status == 'omission') {
+                  textColor = Colors.red;
+                  bgColor = Colors.red.withValues(alpha: 0.12);
+                  borderColor = Colors.red;
+                } else if (status == 'repetition') {
+                  textColor = const Color(0xFFF472B6);
+                  bgColor = const Color(0xFFF472B6).withValues(alpha: 0.12);
+                  borderColor = const Color(0xFFF472B6);
+                } else if (status == 'self_correction' ||
+                    status == 'selfcorrection') {
+                  textColor = const Color(0xFF10B981);
+                  bgColor = const Color(0xFF10B981).withValues(alpha: 0.12);
+                  borderColor = const Color(0xFF10B981);
+                } else if (status == 'mispronunciation') {
+                  textColor = const Color(0xFFEAB308);
+                  bgColor = const Color(0xFFEAB308).withValues(alpha: 0.12);
+                  borderColor = const Color(0xFFEAB308);
+                }
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: borderColor, width: 1),
+                  ),
+                  child: Text(
+                    diff.word,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: textColor,
+                      fontWeight: borderColor != Colors.transparent
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      height: 1.35,
+                    ),
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            Text(
+              submission.passageText.isNotEmpty
+                  ? submission.passageText
+                  : submission.rawTranscript.isNotEmpty
+                      ? submission.rawTranscript
+                      : 'No text content available for this submission.',
               style: GoogleFonts.outfit(
-                fontSize: 15,
-                color: Colors.black,
-                height: 1.8,
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.7,
               ),
-              children: [
-                const TextSpan(
-                  text: 'Once there were two friends a ',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text: 'squirrel ',
-                  style: TextStyle(
-                    color: Color(0xFFEAB308),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: 'and a puppy. They '),
-                const TextSpan(
-                  text: 'used ',
-                  style: TextStyle(
-                    color: Color(0xFFEAB308),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: 'to '),
-                const TextSpan(
-                  text: 'live ',
-                  style: TextStyle(
-                    color: Color(0xFFEAB308),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text:
-                      'and play together. The squirrel was very sporty and always won the game. The puppy used to feel bad and ',
-                ),
-                const TextSpan(
-                  text: 'thought ',
-                  style: TextStyle(
-                    color: Color(0xFFEAB308),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: 'that it was of no use.\n\n'),
-
-                const TextSpan(text: 'One day, it started raining '),
-                const TextSpan(
-                  text: 'heavily',
-                  style: TextStyle(
-                    color: Color(0xFFEAB308),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: '. The squirrel was in '),
-                const TextSpan(
-                  text: 'high ',
-                  style: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: 'spirits. He started doing '),
-                const TextSpan(
-                  text: 'antics ',
-                  style: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: 'but '),
-                const TextSpan(
-                  text: 'suddenly',
-                  style: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: ', '),
-                const TextSpan(
-                  text: 'lost ',
-                  style: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-                const TextSpan(
-                  text: 'his balance and fell in the rain water.\n\n',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const TextSpan(text: 'He '),
-                const TextSpan(
-                  text: 'called ',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text: 'his friend, the puppy for help. The puppy ',
-                ),
-                const TextSpan(
-                  text: 'came ',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text: 'to his rescue. The squirrel climbed on its back and ',
-                ),
-                const TextSpan(
-                  text: 'reached ',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text:
-                      'a safe place. He thanked his friend for saving his life.',
-                ),
-              ],
             ),
-          ),
         ],
       ),
     );

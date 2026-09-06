@@ -82,6 +82,7 @@ class ReadingSubmissionReview {
   final int quizScore;
   final int quizTotal;
   final SuggestedReadingRemarks? suggestedRemarks;
+  final String? feedbackText;
 
   const ReadingSubmissionReview({
     required this.id,
@@ -99,7 +100,46 @@ class ReadingSubmissionReview {
     required this.quizScore,
     required this.quizTotal,
     this.suggestedRemarks,
+    this.feedbackText,
   });
+
+  ReadingSubmissionReview copyWith({
+    String? id,
+    String? studentId,
+    String? bookTitle,
+    String? passageText,
+    String? status,
+    String? submittedAtLabel,
+    String? videoPath,
+    String? videoUrl,
+    int? durationSeconds,
+    String? rawTranscript,
+    List<TranscriptWordDiff>? alignment,
+    double? readingAccuracy,
+    int? quizScore,
+    int? quizTotal,
+    SuggestedReadingRemarks? suggestedRemarks,
+    String? feedbackText,
+  }) {
+    return ReadingSubmissionReview(
+      id: id ?? this.id,
+      studentId: studentId ?? this.studentId,
+      bookTitle: bookTitle ?? this.bookTitle,
+      passageText: passageText ?? this.passageText,
+      status: status ?? this.status,
+      submittedAtLabel: submittedAtLabel ?? this.submittedAtLabel,
+      videoPath: videoPath ?? this.videoPath,
+      videoUrl: videoUrl ?? this.videoUrl,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      rawTranscript: rawTranscript ?? this.rawTranscript,
+      alignment: alignment ?? this.alignment,
+      readingAccuracy: readingAccuracy ?? this.readingAccuracy,
+      quizScore: quizScore ?? this.quizScore,
+      quizTotal: quizTotal ?? this.quizTotal,
+      suggestedRemarks: suggestedRemarks ?? this.suggestedRemarks,
+      feedbackText: feedbackText ?? this.feedbackText,
+    );
+  }
 }
 
 class TranscriptWordDiff {

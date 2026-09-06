@@ -1,11 +1,11 @@
 {
-    "name": "Readbloom Teacher",
-    "short_name": "Readbloom Teacher",
+    "name": "Teacher Readbloom",
+    "short_name": "Teacher Readbloom",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Readbloom Teacher",
+    "description": "Teacher Readbloom",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
