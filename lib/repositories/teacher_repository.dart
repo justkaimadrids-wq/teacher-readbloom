@@ -497,9 +497,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         videoPath: videoPath,
         videoUrl: videoPath.isEmpty
             ? ''
-            : await client.storage
-                  .from('reading-videos')
-                  .createSignedUrl(videoPath, 3600),
+            : await _getSignedVideoUrl(client, videoPath),
         durationSeconds: (row['duration_seconds'] as num?)?.toInt() ?? 0,
         rawTranscript: transcript['raw_transcript'] as String? ?? '',
         alignment: _alignmentFromJson(transcript['alignment_json']),
@@ -1066,7 +1064,21 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
 
     final client = SupabaseService.client;
     if (client == null) return '';
-    return client.storage.from('avatars').createSignedUrl(avatarPath, 3600);
+    try {
+      return await client.storage.from('avatars').createSignedUrl(avatarPath, 3600);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Future<String> _getSignedVideoUrl(SupabaseClient client, String videoPath) async {
+    try {
+      return await client.storage
+          .from('reading-videos')
+          .createSignedUrl(videoPath, 3600);
+    } catch (_) {
+      return '';
+    }
   }
 
   String _extensionFor(String fileName) {
