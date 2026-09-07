@@ -1,11 +1,11 @@
 {
-    "name": "Teacher Readbloom",
-    "short_name": "Teacher Readbloom",
+    "name": "BloomTeach",
+    "short_name": "BloomTeach",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Teacher Readbloom",
+    "description": "BloomTeach",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

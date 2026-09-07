@@ -84,7 +84,7 @@ class _TeacherResetPasswordScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Enter a new password for your ReadBloom account.',
+                  'Enter a new password for your BloomTeach account.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(color: Colors.black54),
                 ),

@@ -25,7 +25,7 @@ class TeacherApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Teacher Readbloom',
+      title: 'BloomTeach',
       debugShowCheckedModeBanner: false,
       theme: TeacherTheme.theme,
       home: const TeacherStateWrapper(),

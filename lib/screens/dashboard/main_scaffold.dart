@@ -164,7 +164,7 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'ReadBloom',
+                      'BloomTeach',
                       style: GoogleFonts.outfit(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

@@ -4,7 +4,7 @@ import 'package:teacher_readbloom/main.dart';
 import 'package:teacher_readbloom/providers/teacher_provider.dart';
 
 void main() {
-  testWidgets('Teacher App smoke test', (WidgetTester tester) async {
+  testWidgets('BloomTeach App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [ChangeNotifierProvider(create: (_) => TeacherProvider())],
