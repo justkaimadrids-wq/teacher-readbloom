@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/teacher_models.dart';
 import '../repositories/teacher_repository.dart';
@@ -20,6 +21,7 @@ class TeacherProvider extends ChangeNotifier {
   late List<StudentProgress> _students;
   late Map<String, List<ReadingSubmissionReview>> _readingReviewsByStudent;
   List<String> _assignedSections = const [];
+  Set<String> _viewedSubmissionIds = {};
 
   bool _isLoggedIn = false;
   bool _isAuthLoading = true;
@@ -97,11 +99,15 @@ class TeacherProvider extends ChangeNotifier {
     return List.unmodifiable(_readingReviewsByStudent[studentId] ?? const []);
   }
 
+  bool isSubmissionViewed(String submissionId) {
+    return _viewedSubmissionIds.contains(submissionId);
+  }
+
   int get newReadingSubmissionsCount {
     int count = 0;
     for (final reviews in _readingReviewsByStudent.values) {
       for (final review in reviews) {
-        if (review.isPendingReview) {
+        if (review.isPendingReview && !_viewedSubmissionIds.contains(review.id)) {
           count++;
         }
       }
@@ -112,7 +118,41 @@ class TeacherProvider extends ChangeNotifier {
   int getNewReadingSubmissionsCountForStudent(String studentId) {
     final reviews = _readingReviewsByStudent[studentId];
     if (reviews == null || reviews.isEmpty) return 0;
-    return reviews.where((r) => r.isPendingReview).length;
+    return reviews
+        .where((r) => r.isPendingReview && !_viewedSubmissionIds.contains(r.id))
+        .length;
+  }
+
+  Future<void> markSubmissionAsViewed(String submissionId) async {
+    final cleanId = submissionId.trim();
+    if (cleanId.isEmpty || _viewedSubmissionIds.contains(cleanId)) return;
+    _viewedSubmissionIds.add(cleanId);
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'teacher_viewed_submissions_${_account.email}';
+      await prefs.setStringList(key, _viewedSubmissionIds.toList());
+    } catch (_) {}
+  }
+
+  Future<void> markStudentSubmissionsAsViewed(String studentId) async {
+    final reviews = _readingReviewsByStudent[studentId];
+    if (reviews == null || reviews.isEmpty) return;
+    bool changed = false;
+    for (final r in reviews) {
+      if (r.id.isNotEmpty && !_viewedSubmissionIds.contains(r.id)) {
+        _viewedSubmissionIds.add(r.id);
+        changed = true;
+      }
+    }
+    if (changed) {
+      notifyListeners();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final key = 'teacher_viewed_submissions_${_account.email}';
+        await prefs.setStringList(key, _viewedSubmissionIds.toList());
+      } catch (_) {}
+    }
   }
 
   void selectStudentForEvaluation(StudentProgress student) {
@@ -527,6 +567,7 @@ class TeacherProvider extends ChangeNotifier {
     _isLoggedIn = false;
     _isPasswordRecovery = false;
     _selectedStudentForEvaluation = null;
+    _viewedSubmissionIds.clear();
     notifyListeners();
   }
 
@@ -603,8 +644,20 @@ class TeacherProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> _loadViewedSubmissions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'teacher_viewed_submissions_${_account.email}';
+      final list = prefs.getStringList(key);
+      if (list != null) {
+        _viewedSubmissionIds = list.toSet();
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadAccountState() async {
     _account = await _teacherRepository.getCurrentAccount();
+    await _loadViewedSubmissions();
     _isTeacherDataLoading = true;
     _teacherDataError = null;
     notifyListeners();

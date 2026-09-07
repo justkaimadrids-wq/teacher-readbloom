@@ -362,7 +362,10 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
   Widget _getMobileTabBody(int index) {
     switch (index) {
       case 0:
-        return DashboardMobileBody(onSelectStudent: _navigateToStudentDetail);
+        return DashboardMobileBody(
+          onSelectStudent: _navigateToStudentDetail,
+          onViewStudents: () => setState(() => _currentTab = 1),
+        );
       case 1:
         return const StudentListMobileBody();
       case 2:
@@ -376,14 +379,20 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       case 6:
         return EvaluationDetailMobileBody(onBack: _navigateBackToDashboard);
       default:
-        return DashboardMobileBody(onSelectStudent: _navigateToStudentDetail);
+        return DashboardMobileBody(
+          onSelectStudent: _navigateToStudentDetail,
+          onViewStudents: () => setState(() => _currentTab = 1),
+        );
     }
   }
 
   Widget _getWebTabBody(int index) {
     switch (index) {
       case 0:
-        return DashboardWebBody(onSelectStudent: _navigateToStudentDetail);
+        return DashboardWebBody(
+          onSelectStudent: _navigateToStudentDetail,
+          onViewStudents: () => setState(() => _currentTab = 1),
+        );
       case 1:
         return StudentListWebBody(onSelectStudent: _navigateToStudentDetail);
       case 2:
@@ -397,7 +406,10 @@ class _TeacherMainScaffoldState extends State<TeacherMainScaffold> {
       case 6:
         return DetailedProgressWebBody(onBack: _navigateBackToDashboard);
       default:
-        return DashboardWebBody(onSelectStudent: _navigateToStudentDetail);
+        return DashboardWebBody(
+          onSelectStudent: _navigateToStudentDetail,
+          onViewStudents: () => setState(() => _currentTab = 1),
+        );
     }
   }
 }

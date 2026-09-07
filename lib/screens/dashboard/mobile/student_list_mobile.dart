@@ -102,6 +102,7 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                             final submission = submissions[idx];
                             return InkWell(
                               onTap: () {
+                                prov.markSubmissionAsViewed(submission.id);
                                 Navigator.of(context).pop(); // Close popup
                                 final eval = prov.getEvaluationForStudent(
                                   student.id,
@@ -161,7 +162,8 @@ class _StudentListMobileBodyState extends State<StudentListMobileBody> {
                                         ],
                                       ),
                                     ),
-                                    if (submission.isPendingReview) ...[
+                                    if (submission.isPendingReview &&
+                                        !prov.isSubmissionViewed(submission.id)) ...[
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 7,

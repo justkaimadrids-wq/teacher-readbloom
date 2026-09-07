@@ -116,6 +116,18 @@ void main() {
       expect(provider.newReadingSubmissionsCount, 2);
       expect(provider.getNewReadingSubmissionsCountForStudent('student-1'), 1);
       expect(provider.getNewReadingSubmissionsCountForStudent('student-2'), 1);
+
+      // Now viewing sub2 without sending feedback should also decrement pending count
+      await provider.markSubmissionAsViewed('sub-2');
+      expect(provider.isSubmissionViewed('sub-2'), isTrue);
+      expect(provider.newReadingSubmissionsCount, 1);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-1'), 0);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-2'), 1);
+
+      // Viewing sub4 clears all remaining notifications
+      await provider.markSubmissionAsViewed('sub-4');
+      expect(provider.newReadingSubmissionsCount, 0);
+      expect(provider.getNewReadingSubmissionsCountForStudent('student-2'), 0);
     });
   });
   group('TeacherProvider Evaluation Metrics Tests', () {
