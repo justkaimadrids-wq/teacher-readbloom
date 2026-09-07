@@ -58,6 +58,14 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
     super.initState();
     _loadExistingFeedbackOrSuggestions();
     _initialFeedbackJson = _composeFeedback();
+    final submissionId = widget.submission?.id;
+    if (submissionId != null && submissionId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<TeacherProvider>().markSubmissionAsViewed(submissionId);
+        }
+      });
+    }
   }
 
   void _loadExistingFeedbackOrSuggestions() {

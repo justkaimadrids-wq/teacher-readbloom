@@ -101,70 +101,72 @@ class _StudentListWebBodyState extends State<StudentListWebBody> {
                             }
                             final submission = submissions[idx];
                             return InkWell(
-                              onTap: () {
-                                Navigator.of(
-                                  context,
-                                ).pop(); // Close reading history popup
-                                final eval = prov.getEvaluationForStudent(
-                                  student.id,
-                                );
-                                showDialog(
-                                  context: context,
-                                  barrierColor: Colors.black.withValues(
-                                    alpha: 0.45,
-                                  ),
-                                  builder: (context) => EvaluationDetailPopup(
-                                    student: student,
-                                    eval: eval,
-                                    storyTitle: submission.bookTitle,
-                                    submission: submission,
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.12),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.menu_book_outlined,
-                                      color: Color(0xFF60A5FA),
-                                      size: 22,
+                                onTap: () {
+                                  prov.markSubmissionAsViewed(submission.id);
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close reading history popup
+                                  final eval = prov.getEvaluationForStudent(
+                                    student.id,
+                                  );
+                                  showDialog(
+                                    context: context,
+                                    barrierColor: Colors.black.withValues(
+                                      alpha: 0.45,
                                     ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            submission.bookTitle,
-                                            style: GoogleFonts.outfit(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w900,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${student.grade} • ${student.section} • ${submission.submittedAtLabel}',
-                                            style: GoogleFonts.outfit(
-                                              fontSize: 12,
-                                              color: Colors.white70,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
+                                    builder: (context) => EvaluationDetailPopup(
+                                      student: student,
+                                      eval: eval,
+                                      storyTitle: submission.bookTitle,
+                                      submission: submission,
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.menu_book_outlined,
+                                        color: Color(0xFF60A5FA),
+                                        size: 22,
                                       ),
-                                    ),
-                                    if (submission.isPendingReview) ...[
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              submission.bookTitle,
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${student.grade} • ${student.section} • ${submission.submittedAtLabel}',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 12,
+                                                color: Colors.white70,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (submission.isPendingReview &&
+                                          !prov.isSubmissionViewed(submission.id)) ...[
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,

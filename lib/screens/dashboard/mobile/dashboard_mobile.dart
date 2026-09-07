@@ -6,7 +6,12 @@ import '../../../models/teacher_models.dart';
 
 class DashboardMobileBody extends StatelessWidget {
   final Function(StudentProgress) onSelectStudent;
-  const DashboardMobileBody({super.key, required this.onSelectStudent});
+  final VoidCallback? onViewStudents;
+  const DashboardMobileBody({
+    super.key,
+    required this.onSelectStudent,
+    this.onViewStudents,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,43 +39,65 @@ class DashboardMobileBody extends StatelessWidget {
             ],
             if (prov.newReadingSubmissionsCount > 0) ...[
               const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.35),
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.mark_email_unread_outlined,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+              InkWell(
+                onTap: onViewStudents,
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                      width: 1.5,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'You have ${prov.newReadingSubmissionsCount} new student reading ${prov.newReadingSubmissionsCount == 1 ? 'submission' : 'submissions'} waiting for evaluation.',
-                        style: GoogleFonts.outfit(
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.mark_email_unread_outlined,
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          size: 16,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'You have ${prov.newReadingSubmissionsCount} new student reading ${prov.newReadingSubmissionsCount == 1 ? 'submission' : 'submissions'} waiting for evaluation.',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      if (onViewStudents != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          'Review',
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFFFCA5A5),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Color(0xFFFCA5A5),
+                          size: 10,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ],
