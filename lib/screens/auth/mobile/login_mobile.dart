@@ -54,17 +54,10 @@ class LoginMobileBody extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Logo Icon
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: TeacherTheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Image.asset(
-                    'lib/assets/logo-icon.png',
-                    height: 68,
-                    width: 68,
-                  ),
+                Image.asset(
+                  'lib/assets/logo-icon.png',
+                  height: 72,
+                  width: 72,
                 ),
                 const SizedBox(height: 20),
                 Text(
