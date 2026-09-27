@@ -230,4 +230,76 @@ void main() {
     expect(provider.isLoggedIn, isFalse);
     expect(provider.isPasswordRecovery, isFalse);
   });
+
+  test('lastLoginDate formats account lastSignInAt correctly', () async {
+    final account = TeacherAccount(
+      name: 'Test Teacher',
+      school: 'Test School',
+      email: 'test@example.com',
+      lastSignInAt: DateTime.utc(2026, 9, 27, 14, 51),
+    );
+    final repo = _CustomAccountTeacherRepository(account);
+    final provider = TeacherProvider(
+      teacherRepository: repo,
+      authService: ResetPasswordTeacherAuthService(),
+    );
+
+    final expectedLocal = account.lastSignInAt!.toLocal();
+    final expectedStr =
+        '${expectedLocal.month}/${expectedLocal.day}/${expectedLocal.year}';
+    expect(provider.lastLoginDate, expectedStr);
+  });
+
+  test('lastLoginDate falls back to today on successful login', () async {
+    final repo = MockTeacherRepository();
+    final provider = TeacherProvider(
+      teacherRepository: repo,
+      authService: ResetPasswordTeacherAuthService(),
+    );
+
+    final loginResult = await provider.login('teacher@test.com', 'pass123');
+    expect(loginResult.success, isTrue);
+
+    final now = DateTime.now();
+    expect(provider.lastLoginDate, '${now.month}/${now.day}/${now.year}');
+  });
+
+  test('updateStudentSkillLevels clamps skill levels to maximum 10 and minimum 1', () async {
+    final repo = BadgeFixtureTeacherRepository();
+    final provider = TeacherProvider(
+      teacherRepository: repo,
+      authService: ResetPasswordTeacherAuthService(),
+    );
+
+    expect(provider.students.isNotEmpty, isTrue);
+    final studentId = provider.students.first.id;
+
+    final error = await provider.updateStudentSkillLevels(
+      studentId: studentId,
+      readingLevel: 15,
+      vocabularyLevel: 11,
+      wordMasterLevel: 10,
+      comprehensionLevel: 0,
+    );
+
+    expect(error, isNull);
+    final updated = provider.students.firstWhere((s) => s.id == studentId);
+    expect(updated.readingLevel, 10);
+    expect(updated.vocabularySkillLevel, 10);
+    expect(updated.wordMasterLevel, 10);
+    expect(updated.comprehensionLevel, 1);
+  });
 }
+
+class _CustomAccountTeacherRepository extends MockTeacherRepository {
+  final TeacherAccount _customAccount;
+
+  _CustomAccountTeacherRepository(this._customAccount);
+
+  @override
+  TeacherAccount getAccount() => _customAccount;
+
+  @override
+  Future<TeacherAccount> getCurrentAccount() async => _customAccount;
+}
+

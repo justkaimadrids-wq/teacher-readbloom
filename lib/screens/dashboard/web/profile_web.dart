@@ -99,7 +99,7 @@ class ProfileWebBody extends StatelessWidget {
 
                       // Info Rows
                       _buildInfoRow('Email Address', prov.email),
-                      _buildInfoRow('Last Log In', '4/19/2026'),
+                      _buildInfoRow('Last Log In', prov.lastLoginDate),
 
                       const SizedBox(height: 32),
 
