@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/teacher_provider.dart';
 import '../../../models/teacher_models.dart';
-import '../../../widgets/app_dialogs.dart';
 import '../../../widgets/loading_dialog.dart';
 
 class BadgesMobileBody extends StatefulWidget {
@@ -33,25 +32,9 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
   }
 
   void _showBadgesPopup(BuildContext context, StudentProgress initialStudent) {
-    final addController = TextEditingController();
-
-    Future<void> closeDialog(BuildContext context) async {
-      if (addController.text.trim().isNotEmpty) {
-        final shouldClose = await showAppConfirmDialog(
-          context,
-          title: 'Discard Badge Text?',
-          message: 'The badge name you typed has not been awarded yet.',
-          confirmLabel: 'Discard',
-          isDanger: true,
-        );
-        if (!shouldClose || !context.mounted) return;
-      }
-      Navigator.of(context).pop();
-    }
-
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.45),
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -68,13 +51,8 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                 .join()
                 .toUpperCase();
 
-            return PopScope<Object?>(
-              canPop: false,
-              onPopInvokedWithResult: (didPop, result) async {
-                if (!didPop) await closeDialog(context);
-              },
-              child: Center(
-                child: Dialog(
+            return Center(
+              child: Dialog(
                   backgroundColor: Colors.transparent,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
@@ -112,7 +90,8 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                                     ),
                                   ),
                                   IconButton(
-                                    onPressed: () => closeDialog(context),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
                                     icon: const Icon(
                                       Icons.close,
                                       color: Colors.white70,
@@ -262,114 +241,33 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                               const SizedBox(height: 12),
 
                               // Award badge section
-                              Text(
-                                'Award New Badge',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white70,
+                              // Automatic Achievements Info Section
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Colors.white12,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: TextField(
-                                        controller: addController,
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 12,
-                                        ),
-                                        decoration: const InputDecoration(
-                                          hintText: 'Badge name...',
-                                          hintStyle: TextStyle(
-                                            color: Colors.black38,
-                                          ),
-                                          border: InputBorder.none,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
+                                child: Row(
+                                  children: [
+                                    const Text('ℹ️', style: TextStyle(fontSize: 16)),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Badges and achievements are automatically earned when students pass reading quizzes with 1 or fewer mistakes.',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 11,
+                                          color: Colors.white70,
+                                          height: 1.3,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      final text = addController.text.trim();
-                                      if (text.isEmpty) {
-                                        await showAppMessageDialog(
-                                          context,
-                                          title: 'Badge Not Added',
-                                          message:
-                                              'Please enter a badge name first.',
-                                          isDanger: true,
-                                        );
-                                        return;
-                                      }
-                                      final messenger = ScaffoldMessenger.of(
-                                        context,
-                                      );
-                                      final error = await runWithLoadingDialog(
-                                        context,
-                                        () => context
-                                            .read<TeacherProvider>()
-                                            .addBadgeToStudent(
-                                              student.id,
-                                              text,
-                                            ),
-                                        message: 'Adding badge...',
-                                      );
-                                      if (error != null) {
-                                        if (!context.mounted) return;
-                                        await showAppMessageDialog(
-                                          context,
-                                          title: 'Badge Not Added',
-                                          message: error,
-                                          isDanger: true,
-                                        );
-                                        return;
-                                      }
-                                      addController.clear();
-                                      setStateDialog(() {});
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Badge "$text" awarded to ${student.name}!',
-                                          ),
-                                          backgroundColor: const Color(
-                                            0xFF10B981,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF60A5FA),
-                                      foregroundColor: Colors.black,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Award',
-                                      style: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -378,13 +276,12 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    ).whenComplete(addController.dispose);
-  }
+              );
+            },
+          );
+        },
+      );
+    }
 
   Widget _buildSkillLevelControls(
     BuildContext context,
@@ -504,9 +401,12 @@ class _BadgesMobileBodyState extends State<BadgesMobileBody> {
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
-            onPressed: () => _saveSkillLevel(context, level + 1, onChanged),
+            onPressed: level >= 10
+                ? null
+                : () => _saveSkillLevel(context, level + 1, onChanged),
             icon: const Icon(Icons.add_circle_outline),
             color: Colors.white70,
+            disabledColor: Colors.white24,
           ),
         ],
       ),

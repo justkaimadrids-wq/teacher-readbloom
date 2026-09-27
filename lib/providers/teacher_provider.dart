@@ -33,6 +33,7 @@ class TeacherProvider extends ChangeNotifier {
   bool _isRefreshingData = false;
   bool _isSavingFeedback = false;
   bool _isUpdatingSkillLevel = false;
+  DateTime? _lastLoginDateFallback;
   String? _booksError;
   String? _generateBookDraftError;
   String? _teacherDataError;
@@ -65,6 +66,20 @@ class TeacherProvider extends ChangeNotifier {
   String get school => _account.school;
   String get email => _account.email;
   String get avatarUrl => _account.avatarUrl;
+  DateTime? get lastSignInAt => _account.lastSignInAt;
+
+  String get lastLoginDate {
+    final date = _account.lastSignInAt?.toLocal() ?? _lastLoginDateFallback;
+    if (date == null) {
+      if (_isLoggedIn) {
+        final now = DateTime.now();
+        return '${now.month}/${now.day}/${now.year}';
+      }
+      return '';
+    }
+    return '${date.month}/${date.day}/${date.year}';
+  }
+
   List<String> get assignedSections => _assignedSections;
   bool get isUploadingAvatar => _isUploadingAvatar;
   List<ClassStats> get classes => _classes;
@@ -288,12 +303,10 @@ class TeacherProvider extends ChangeNotifier {
     final index = _students.indexWhere((student) => student.id == studentId);
     if (index == -1) return null;
 
-    final safeReadingLevel = readingLevel < 1 ? 1 : readingLevel;
-    final safeVocabularyLevel = vocabularyLevel < 1 ? 1 : vocabularyLevel;
-    final safeWordMasterLevel = wordMasterLevel < 1 ? 1 : wordMasterLevel;
-    final safeComprehensionLevel = comprehensionLevel < 1
-        ? 1
-        : comprehensionLevel;
+    final safeReadingLevel = readingLevel.clamp(1, 10);
+    final safeVocabularyLevel = vocabularyLevel.clamp(1, 10);
+    final safeWordMasterLevel = wordMasterLevel.clamp(1, 10);
+    final safeComprehensionLevel = comprehensionLevel.clamp(1, 10);
 
     try {
       await _teacherRepository.updateStudentSkillLevels(
@@ -544,6 +557,7 @@ class TeacherProvider extends ChangeNotifier {
       password: password,
     );
     if (result.success) {
+      _lastLoginDateFallback = DateTime.now();
       try {
         await _loadAccountState();
       } catch (_) {
@@ -568,6 +582,7 @@ class TeacherProvider extends ChangeNotifier {
     _isPasswordRecovery = false;
     _selectedStudentForEvaluation = null;
     _viewedSubmissionIds.clear();
+    _lastLoginDateFallback = null;
     notifyListeners();
   }
 
@@ -655,9 +670,28 @@ class TeacherProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> _loadLastLoginDate() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'teacher_last_login_${_account.email}';
+      if (_account.lastSignInAt != null) {
+        await prefs.setString(key, _account.lastSignInAt!.toIso8601String());
+      } else {
+        final cached = prefs.getString(key);
+        if (cached != null && cached.isNotEmpty) {
+          final parsed = DateTime.tryParse(cached);
+          if (parsed != null) {
+            _lastLoginDateFallback = parsed;
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadAccountState() async {
     _account = await _teacherRepository.getCurrentAccount();
     await _loadViewedSubmissions();
+    await _loadLastLoginDate();
     _isTeacherDataLoading = true;
     _teacherDataError = null;
     notifyListeners();

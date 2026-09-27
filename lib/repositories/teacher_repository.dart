@@ -10,12 +10,14 @@ class TeacherAccount {
   final String school;
   final String email;
   final String avatarUrl;
+  final DateTime? lastSignInAt;
 
   const TeacherAccount({
     required this.name,
     required this.school,
     required this.email,
     this.avatarUrl = '',
+    this.lastSignInAt,
   });
 }
 
@@ -262,11 +264,18 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
       profile?['avatar_url'] as String?,
     );
 
+    DateTime? lastSignInAt;
+    final rawLastSignIn = user.lastSignInAt;
+    if (rawLastSignIn != null && rawLastSignIn.trim().isNotEmpty) {
+      lastSignInAt = DateTime.tryParse(rawLastSignIn.trim());
+    }
+
     return TeacherAccount(
       name: profile?['full_name'] as String? ?? base.name,
       school: school,
       email: profile?['email'] as String? ?? user.email ?? base.email,
       avatarUrl: avatarUrl,
+      lastSignInAt: lastSignInAt,
     );
   }
 
