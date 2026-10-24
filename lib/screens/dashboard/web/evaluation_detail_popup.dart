@@ -311,16 +311,26 @@ class _EvaluationDetailPopupState extends State<EvaluationDetailPopup> {
         ),
         const SizedBox(height: 16),
         ElevatedButton.icon(
-          onPressed: widget.submission?.videoUrl.isNotEmpty == true
-              ? () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => VideoReviewDialog(
-                      videoUrl: widget.submission!.videoUrl,
-                      title: widget.submission!.bookTitle,
-                      durationSeconds: widget.submission!.durationSeconds,
-                    ),
-                  );
+          onPressed: (widget.submission?.videoUrl.isNotEmpty == true ||
+                  widget.submission?.videoPath.isNotEmpty == true)
+              ? () async {
+                  var url = widget.submission?.videoUrl ?? '';
+                  if (url.isEmpty &&
+                      widget.submission?.videoPath.isNotEmpty == true) {
+                    url = await context
+                        .read<TeacherProvider>()
+                        .getSignedVideoUrl(widget.submission!.videoPath);
+                  }
+                  if (url.isNotEmpty && context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => VideoReviewDialog(
+                        videoUrl: url,
+                        title: widget.submission!.bookTitle,
+                        durationSeconds: widget.submission!.durationSeconds,
+                      ),
+                    );
+                  }
                 }
               : null,
           icon: const Icon(Icons.play_circle_outline),
