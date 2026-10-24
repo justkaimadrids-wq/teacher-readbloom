@@ -688,7 +688,12 @@ class TeacherProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<String> getSignedVideoUrl(String videoPath) {
+    return _teacherRepository.getSignedVideoUrl(videoPath);
+  }
+
   Future<void> _loadAccountState() async {
+    _teacherRepository.clearCache();
     _account = await _teacherRepository.getCurrentAccount();
     await _loadViewedSubmissions();
     await _loadLastLoginDate();

@@ -73,6 +73,8 @@ abstract class TeacherRepository {
     required String content,
     required List<BookQuestionInput> questions,
   });
+  Future<String> getSignedVideoUrl(String videoPath);
+  void clearCache();
 }
 
 class MockTeacherRepository implements TeacherRepository {
@@ -228,9 +230,28 @@ class MockTeacherRepository implements TeacherRepository {
     _books.add(newBook);
     return newBook;
   }
+
+  @override
+  Future<String> getSignedVideoUrl(String videoPath) async =>
+      'https://example.com/mock_video.mp4';
+
+  @override
+  void clearCache() {}
 }
 
 class SupabaseTeacherRepository extends MockTeacherRepository {
+  Map<String, List<ReadingSubmissionReview>>? _cachedReviews;
+  List<StudentProgress>? _cachedStudents;
+  List<Book>? _cachedBooks;
+  final Map<String, String> _signedVideoUrls = {};
+
+  @override
+  void clearCache() {
+    _cachedReviews = null;
+    _cachedStudents = null;
+    _cachedBooks = null;
+    _signedVideoUrls.clear();
+  }
   @override
   Future<TeacherAccount> getCurrentAccount() async {
     final client = SupabaseService.client;
@@ -343,7 +364,26 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         )
         .order('grade_level');
 
-    final submissionsByStudent = await getCurrentReadingReviews();
+    final submissionsByStudent =
+        _cachedReviews ?? await getCurrentReadingReviews();
+    _cachedReviews = submissionsByStudent;
+
+    final allBadgesMap = <String, List<String>>{};
+    try {
+      final badgeRows = await client
+          .from('student_badges')
+          .select('student_id,badges(name)');
+      for (final b in (badgeRows as List<dynamic>? ?? const [])) {
+        final bMap = b as Map<String, dynamic>;
+        final sId = bMap['student_id']?.toString() ?? '';
+        final badgeInfo = bMap['badges'] as Map<String, dynamic>?;
+        final badgeName = badgeInfo?['name'] as String?;
+        if (sId.isNotEmpty && badgeName != null && badgeName.isNotEmpty) {
+          allBadgesMap.putIfAbsent(sId, () => []).add(badgeName);
+        }
+      }
+    } catch (_) {}
+
     final students = <StudentProgress>[];
     for (final row in rows) {
       final profile = _embeddedMap(row['profiles']);
@@ -363,7 +403,12 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
           : accuracyValues.reduce((a, b) => a + b) / accuracyValues.length;
       final status = _statusForAccuracy(avgAccuracy, submittedCount);
 
-      final badges = await _getStudentBadges(id);
+      final badges = allBadgesMap[id] ?? const [];
+
+      final avatarPath = profile['avatar_url'] as String?;
+      final avatarUrl = (avatarPath != null && avatarPath.trim().isNotEmpty)
+          ? await _getSignedAvatarUrl(avatarPath)
+          : '';
 
       students.add(
         StudentProgress(
@@ -379,9 +424,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
           badges: badges,
           grade: row['grade_level'] as String? ?? '',
           section: section['name'] as String? ?? '',
-          avatarUrl: await _getSignedAvatarUrl(
-            profile['avatar_url'] as String?,
-          ),
+          avatarUrl: avatarUrl,
           skillLevel:
               row['current_skill_level'] as String? ?? 'Reading Explorer',
           readingLevel: (row['reading_level'] as num?)?.toInt() ?? 1,
@@ -392,13 +435,14 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         ),
       );
     }
+    _cachedStudents = students;
     return students;
   }
 
   @override
   Future<List<ClassStats>> getCurrentClasses() async {
-    final students = await getCurrentStudents();
-    final books = await getCurrentBooks();
+    final students = _cachedStudents ?? await getCurrentStudents();
+    final books = _cachedBooks ?? await getCurrentBooks();
     final byGrade = <String, List<StudentProgress>>{};
     for (final student in students) {
       byGrade.putIfAbsent(student.grade, () => []).add(student);
@@ -504,9 +548,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         status: row['status'] as String? ?? '',
         submittedAtLabel: _dateLabel(row['submitted_at'] ?? row['created_at']),
         videoPath: videoPath,
-        videoUrl: videoPath.isEmpty
-            ? ''
-            : await _getSignedVideoUrl(client, videoPath),
+        videoUrl: _signedVideoUrls[videoPath] ?? '',
         durationSeconds: (row['duration_seconds'] as num?)?.toInt() ?? 0,
         rawTranscript: transcript['raw_transcript'] as String? ?? '',
         alignment: _alignmentFromJson(transcript['alignment_json']),
@@ -528,6 +570,7 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
       );
       result.putIfAbsent(studentId, () => []).add(review);
     }
+    _cachedReviews = result;
     return result;
   }
 
@@ -714,28 +757,9 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
         .order('grade_level')
         .order('title');
 
-    return rows.map<Book>(_bookFromRow).toList();
-  }
-
-  Future<List<String>> _getStudentBadges(String studentId) async {
-    final client = SupabaseService.client;
-    if (client == null) return const [];
-    try {
-      final rows = await client
-          .from('student_badges')
-          .select('badges(name)')
-          .eq('student_id', studentId)
-          .order('awarded_at', ascending: false);
-      return rows
-          .map<String>((row) {
-            final badge = _embeddedMap(row['badges']);
-            return badge['name'] as String? ?? '';
-          })
-          .where((badge) => badge.isNotEmpty)
-          .toList();
-    } catch (_) {
-      return const [];
-    }
+    final books = rows.map<Book>(_bookFromRow).toList();
+    _cachedBooks = books;
+    return books;
   }
 
   @override
@@ -910,11 +934,32 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
   }
 
   String _dateLabel(dynamic rawDate) {
-    final date = DateTime.tryParse(rawDate?.toString() ?? '');
-    if (date == null) return '';
-    return '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
+    if (rawDate == null) return '';
+    final str = rawDate.toString().trim();
+    if (str.isEmpty) return '';
+    final date = DateTime.tryParse(str);
+    if (date == null) return str;
+
+    // Convert UTC timestamps to Philippine Standard Time (UTC+8)
+    final phTime = (str.contains('T') || str.contains(':') || date.isUtc)
+        ? date.toUtc().add(const Duration(hours: 8))
+        : date.toLocal();
+
+    final year = phTime.year.toString().padLeft(4, '0');
+    final month = phTime.month.toString().padLeft(2, '0');
+    final day = phTime.day.toString().padLeft(2, '0');
+
+    if (str.contains('T') || str.contains(':')) {
+      final hour12 = phTime.hour == 0
+          ? 12
+          : (phTime.hour > 12 ? phTime.hour - 12 : phTime.hour);
+      final hourStr = hour12.toString().padLeft(2, '0');
+      final minuteStr = phTime.minute.toString().padLeft(2, '0');
+      final period = phTime.hour >= 12 ? 'PM' : 'AM';
+      return '$year-$month-$day $hourStr:$minuteStr $period';
+    }
+
+    return '$year-$month-$day';
   }
 
   List<TranscriptWordDiff> _alignmentFromJson(dynamic rawAlignment) {
@@ -1085,6 +1130,23 @@ class SupabaseTeacherRepository extends MockTeacherRepository {
       return await client.storage
           .from('reading-videos')
           .createSignedUrl(videoPath, 3600);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Future<String> getSignedVideoUrl(String videoPath) async {
+    final client = SupabaseService.client;
+    if (client == null || videoPath.trim().isEmpty) return '';
+    final cached = _signedVideoUrls[videoPath];
+    if (cached != null && cached.isNotEmpty) return cached;
+    try {
+      final url = await _getSignedVideoUrl(client, videoPath);
+      if (url.isNotEmpty) {
+        _signedVideoUrls[videoPath] = url;
+      }
+      return url;
     } catch (_) {
       return '';
     }
